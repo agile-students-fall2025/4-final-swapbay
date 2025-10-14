@@ -52,7 +52,7 @@ The project follows an Agile/SCRUM development process, with iterative sprints, 
 - User registration, login, and profile management  
 - Ability to post and manage item listings with descriptions and images  
 - Three offer types: cash offers and swap offers, and both  
-- Offer review system with acceptance or counter-offer options  
+- Offer review system with acceptance and rejection 
 
 **Additional Features (planned)**
 - In-app messaging between users before confirming transactions  
@@ -65,7 +65,7 @@ These features together provide a comprehensive and user-friendly marketplace ex
 
 ## Instructions for Building and Testing the Project
 
-This section will be **updated down the road** as the project reaches later stages of development.  
+This section will be as the project reaches later stages of development.  
 It will include detailed setup, build, and testing procedures once the system architecture and automation are finalized.
 
 ---
