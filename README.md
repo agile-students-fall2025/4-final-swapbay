@@ -29,6 +29,11 @@ The goal of SwapBay is to make secondhand exchange accessible, affordable, and e
 
 - **Scrum Master:** *Hailemariam*  
 - **Product Owner:** *Hailemariam*  
+- **Developers**
+    * Amanuel
+    * Abinet
+    * Sebahadin
+    * Krishiv
 
 *(Roles rotate each sprint.)*
 
@@ -53,10 +58,11 @@ The project follows an Agile/SCRUM development process, with iterative sprints, 
 - Ability to post and manage item listings with descriptions and images  
 - Three offer types: cash offers and swap offers, and both  
 - Offer review system with acceptance and rejection 
+- Search and filtering of listings by category, price, or keywords   
 
 **Additional Features (planned)**
 - In-app messaging between users before confirming transactions  
-- Search and filtering of listings by category, price, or keywords   
+
  
 
 These features together provide a comprehensive and user-friendly marketplace experience.
@@ -102,4 +108,3 @@ For detailed contribution guidelines, please see the [CONTRIBUTING.md](./CONTRIB
 
 ---
 
-© 2025 SwapBay Team.
