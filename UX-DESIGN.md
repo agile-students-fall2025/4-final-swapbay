@@ -41,7 +41,7 @@ Allows the user to compose an offer for another item.
 - **Confirm Offer** button to submit.
 ---
 
-### 6. Profile and Edit Screen
+### 4. Profile and Edit Screen
 ![Profile Screen](ux-design/profile.png)
 
 **Purpose:**  
