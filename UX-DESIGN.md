@@ -27,7 +27,7 @@ You can explore the prototype here:
 ![Home Page](ux-design/home.png)
 
 *Purpose:* On the Home page, Users can browser/search/filter postings, make offers, message owners, access their profile settings, inbox and status of their offers. 
-### 3. Offer Composer Screen
+### Offer Composer Screen
 ![Offer Composer Screen](ux-design/offercomposer.png)
 
 **Purpose:**  
@@ -41,7 +41,7 @@ Allows the user to compose an offer for another item.
 - **Confirm Offer** button to submit.
 ---
 
-### 4. Profile and Edit Screen
+### Profile and Edit Screen
 ![Profile Screen](ux-design/profile.png)
 
 **Purpose:**  
