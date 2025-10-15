@@ -112,3 +112,50 @@ Displays user account details and available actions.
 - **Cancel Edit** button returns to the previous screen.
 
 ---
+
+### My Offers Page
+
+![My Offers](ux-design/my%20offers.png)
+
+**Purpose:**  
+Allows users to view all the offers they have made to other users' listings.
+
+**Key Features:**
+- Organized card layout showing each offer with details such as *item name*, *offer type* (money or swap), and *offer status* (pending, accepted, or rejected).  
+- Quick navigation to each item's details to track progress or withdraw offers.  
+- Clear indicators for pending and completed transactions to keep users informed.  
+- Visual consistency with other listing pages for a seamless experience.
+
+---
+
+### Inbox Page
+
+![Inbox](ux-design/inbox.png)
+
+**Purpose:**  
+Provides a central communication hub where users can manage all their chats.
+
+**Key Features:**
+- List view showing all chat partners with *profile image*, *name*, and *last message preview*.  
+- Navigation options to go **back to Home**, **open Profile**, or **view Chat History**.  
+- Notification indicators for unread messages to keep users updated.  
+- Intuitive design enabling users to quickly jump between ongoing conversations.
+
+---
+
+### Chat View Page
+
+![Chat View](ux-design/chat%20view.png)
+
+**Purpose:**  
+Facilitates one-on-one conversations between users to negotiate or discuss offers.
+
+**Key Features:**
+- Clear distinction between **sent** and **received** messages for readability.  
+- Option to return to **Inbox** or **Profile** for navigation consistency.  
+- Chat bubbles designed to resemble common messaging interfaces for familiarity.  
+- Space for inputting and sending new messages at the bottom of the screen.  
+- Potential integration of multimedia (e.g., image sharing) in later iterations.
+
+---
+
