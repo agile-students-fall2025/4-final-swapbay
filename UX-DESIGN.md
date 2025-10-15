@@ -27,6 +27,61 @@ You can explore the prototype here:
 ![Home Page](ux-design/home.png)
 
 *Purpose:* On the Home page, Users can browser/search/filter postings, make offers, message owners, access their profile settings, inbox and status of their offers. 
+
+
+
+
+---
+
+### Add New Listing Page
+
+![Add New Listing Page](ux-design/addNewListing.png)
+
+**Purpose:**  
+Allows sellers to create new listings by entering details about the item they want to sell or swap.
+
+**Key Features:**
+- Input fields for *Item Name*, *Category*, *Description*, and *Condition*.  
+- Placeholder gray box for uploading an image.  
+
+- **Proceed** button at the bottom to finalize the post.  
+
+---
+
+### My Listings Page
+
+![My Listings Page](ux-design/myListings.png)
+
+**Purpose:**  
+Displays all items the user has listed for sale or swap.
+
+**Key Features:**
+- Card layout showing each listing with name, image placeholder, and brief details.  
+- Indicators showing *number of offers* received for each item.  
+- Action buttons for **Details**, or **Remove** a listing.  
+- **Add Listing** shortcut button for convenience.  
+
+---
+
+### Per Listing Details Page
+
+![Per Listing Details Page](ux-design/perListingDetails.png)
+
+**Purpose:**  
+Shows complete details about a single listing, including received offers and offer status.
+
+**Key Features:**
+- Gray placeholder box for the item image.  
+- Text fields displaying the *item description*, *condition*, and *category*.  
+- Section for *offers received* 
+
+---
+
+
+
+
+
+
 ### Offer Composer Screen
 ![Offer Composer Screen](ux-design/offercomposer.png)
 
