@@ -97,7 +97,7 @@ Allows the user to compose an offer for another item.
 ---
 
 ### Profile and Edit Screen
-![Profile Screen](ux-design/profile.png)
+![Profile Screen](ux-design/profile.png) ![Edit Profile Screen](ux-design/editprofile.png)
 
 **Purpose:**  
 Displays user account details and available actions.
