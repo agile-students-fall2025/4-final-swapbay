@@ -30,38 +30,36 @@ You can explore the prototype here:
 
 
 
-
 ---
 
-### Add New Listing Page
+## My Items Page
 
-![Add New Listing Page](ux-design/addNewListing.png)
+![My Items Page](ux-design/myItems.png)
 
 **Purpose:**  
-Allows sellers to create new listings by entering details about the item they want to sell or swap.
+Displays all items owned by the user — whether listed or not — as part of their personal inventory.
 
-**Key Features:**
-- Input fields for *Item Name*, *Category*, *Description*, and *Condition*.  
-- Placeholder gray box for uploading an image.  
-
-- **Proceed** button at the bottom to finalize the post.  
+**Key Features:**  
+- Card layout for each item showing **image**, **name**, and **short description**.  
+- **Remove** button allows users to delete an item from their inventory.  
+- **Details** button opens a full view of the item’s information.  
+- **Add to My Listing** button allows users to publish the selected item on the *My Listings* page.  
+- **Add New Item** button at the top enables quick addition of a new item to the inventory.  
 
 ---
 
-### My Listings Page
+## My Listings Page
 
 ![My Listings Page](ux-design/myListings.png)
 
 **Purpose:**  
-Displays all items the user has listed for sale or swap.
+Displays all active items that the user has chosen to list for swapping or selling.  
 
-**Key Features:**
-- Card layout showing each listing with name, image placeholder, and brief details.  
-- Indicators showing *number of offers* received for each item.  
-- Action buttons for **Details**, or **Remove** a listing.  
-- **Add Listing** shortcut button for convenience.  
-
----
+**Key Features:**  
+- Card layout showing each active listing with **item image**, **title**, **category**, and **offer count**.  
+- **Remove** button lets users take an item down from their public listings (it remains stored in *My Items*).  
+- **Details** button opens the full listing page to view or edit details and manage offers.  
+- **Add to Listing** button takes users to the *My Items* screen, where they can select additional items to list.  
 
 ### Per Listing Details Page
 
@@ -75,9 +73,25 @@ Shows complete details about a single listing, including received offers and off
 - Text fields displaying the *item description*, *condition*, and *category*.  
 - Section for *offers received* 
 
+
+
 ---
 
+## Add New Item Page
 
+![Add New Item Page](ux-design/addNewItem.png)
+
+**Purpose:**  
+Allows users to create and store a new item in their personal inventory (“My Items”) without immediately listing it for swap or sale.  
+
+**Key Features:**  
+- Input fields for **Item Name**, **Category**, **Description**, and **Condition**.  
+- Placeholder gray box for uploading an **Item Image**.  
+- **Save Item** button adds the new item to the *My Items* inventory.  
+- **Cancel** button allows users to return to the previous screen without saving.  
+
+
+---
 
 
 
