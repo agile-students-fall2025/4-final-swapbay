@@ -88,7 +88,7 @@ Allows users to create and store a new item in their personal inventory (“My I
 - Input fields for **Item Name**, **Category**, **Description**, and **Condition**.  
 - Placeholder gray box for uploading an **Item Image**.  
 - **Save Item** button adds the new item to the *My Items* inventory.  
-- **Cancel** button allows users to return to the previous screen without saving.  
+
 
 
 ---
