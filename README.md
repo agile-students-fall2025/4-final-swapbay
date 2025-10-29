@@ -78,7 +78,7 @@ These features together provide a comprehensive and user-friendly marketplace ex
 git clone https://github.com/agile-students-fall2025/4-final-swapbay
 
 # Move into frontend
-cd 4-final-swapbay/front-end
+cd front-end
 
 # Install dependencies
 npm install
