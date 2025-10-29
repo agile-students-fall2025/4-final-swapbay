@@ -4,8 +4,6 @@ The **SwapBay Frontend** is a React.js single-page application that provides the
 
 ---
 
-## 🚀 Getting Started
-
 ### 1. Prerequisites
 Make sure you have installed:
 - [Node.js](https://nodejs.org/) (version 18+ recommended)
@@ -40,7 +38,7 @@ npm run dev
 This will start the app using [Vite](https://vitejs.dev/).  
 Visit the app in your browser at:
 
-👉 **http://localhost:5173/**
+ **http://localhost:5173/**
 
 ---
 
