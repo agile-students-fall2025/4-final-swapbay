@@ -22,7 +22,7 @@ Clone the repository and navigate into the frontend directory:
 
 ```bash
 git clone https://github.com/agile-students-fall2025/4-final-swapbay
-cd 4-final-swapbay/front-end
+cd front-end
 npm install
 ```
 
