@@ -71,8 +71,25 @@ These features together provide a comprehensive and user-friendly marketplace ex
 
 ## Instructions for Building and Testing the Project
 
-This section will be as the project reaches later stages of development.  
-It will include detailed setup, build, and testing procedures once the system architecture and automation are finalized.
+### Running the Frontend
+
+```bash
+# Clone repo
+git clone https://github.com/agile-students-fall2025/4-final-swapbay
+
+# Move into frontend
+cd 4-final-swapbay/front-end
+
+# Install dependencies
+npm install
+
+# Run dev server
+npm run dev
+```
+The app will open at:  
+http://localhost:5173/
+
+**More Setup information will come in the future.**
 
 ---
 
