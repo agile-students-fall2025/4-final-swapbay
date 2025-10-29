@@ -1,6 +1,6 @@
 # SwapBay Frontend
 
-The **SwapBay Frontend** is a React.js single-page application that provides the complete user experience for the SwapBay marketplace — including authentication, listings, offers, messaging, and profile management.
+The **SwapBay Frontend** is a React.js application that provides the complete user experience for the SwapBay marketplace — including authentication, listings, offers, messaging, and profile management.
 
 ---
 
