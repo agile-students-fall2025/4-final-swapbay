@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { mockItems } from '../utils/mockItems';
 import { Link, useNavigate } from 'react-router-dom';
+import { useReviews } from '../context/ReviewContext';
 import toast from 'react-hot-toast';
 
 export default function Home() {
@@ -8,6 +9,7 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [offerTypeFilter, setOfferTypeFilter] = useState('All');
   const navigate = useNavigate();
+  const { getAverageRating } = useReviews();
 
   const categories = ['All', 'Electronics', 'Sports', 'Computers'];
   const offerTypes = ['All', 'Money Only', 'Swap Only', 'Both'];
@@ -96,7 +98,16 @@ export default function Home() {
                 </p>
 
                 <p className="text-gray-700 text-sm">{item.description}</p>
-                <p className="text-xs text-gray-400">Owner: @{item.owner}</p>
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <span>Owner: @{item.owner}</span>
+                    {getAverageRating(item.owner) > 0 && (
+                      <span className="flex items-center gap-1 text-yellow-600 font-semibold">
+                        ★ {getAverageRating(item.owner)}
+                      </span>
+                    )}
+                  </div>
+                </div>
 
                 <div className="flex justify-between mt-3">
                   <button

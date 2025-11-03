@@ -1,9 +1,11 @@
 import { useParams, Link } from 'react-router-dom';
 import { mockItems } from '../utils/mockItems';
+import { useReviews } from '../context/ReviewContext';
 
 export default function ItemDetail() {
   const { id } = useParams();
   const item = mockItems.find((i) => i.id === parseInt(id));
+  const { getAverageRating } = useReviews();
 
   if (!item) {
     return (
@@ -25,6 +27,17 @@ export default function ItemDetail() {
       />
       <div className="p-6">
         <h1 className="text-3xl font-bold mb-2">{item.title}</h1>
+        <div className="flex items-center gap-3 mb-4">
+          <p className="text-gray-700">Owner: @{item.owner}</p>
+          {getAverageRating(item.owner) > 0 && (
+            <Link
+              to={`/users/${item.owner}/reviews`}
+              className="flex items-center gap-1 text-yellow-600 font-semibold hover:underline"
+            >
+              ★ {getAverageRating(item.owner)}
+            </Link>
+          )}
+        </div>
         <p className="text-gray-700 mb-4">{item.description}</p>
         <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
           Make Offer
