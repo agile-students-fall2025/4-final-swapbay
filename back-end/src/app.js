@@ -23,7 +23,11 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'swapbay-backend', timestamp: new Date().toISOString() });
 });
 
-
+app.use('/api/auth', authRoutes);
+app.use('/api/listings', listingsRoutes);
+app.use('/api/me/items', myItemsRoutes);
+app.use('/api/offers', offersRoutes);
+app.use('/api/chats', chatsRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
