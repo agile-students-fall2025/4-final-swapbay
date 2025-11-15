@@ -18,13 +18,14 @@ const resetStore = () => {
 describe('Item creation', () => {
   beforeEach(() => resetStore());
 
-  // Friendly reminder that a title is required when I add something new
+ // Validates that I can’t save an item without a title
   it('reminds me to name my item before saving', () => {
     const user = getCurrentUser();
     expect(() => addItemForUser(user, { title: '' })).to.throw('Title is required');
   });
 
-  // Checks that new private gear belongs to me and stays hidden from explore feed
+
+  // Confirms that when I add a new item, it starts as private
   it('adds my private item without showing it to everyone yet', () => {
     const user = getCurrentUser();
     const added = addItemForUser(user, { title: 'Gaming Chair', category: 'Furniture' });
@@ -35,7 +36,8 @@ describe('Item creation', () => {
     expect(publicListings.some((item) => item.id === added.id)).to.equal(false);
   });
 
-  // Ensures swapping accounts changes which items get filtered out
+
+  // Ensures I don’t see my own listings while browsing the public feed
   it('respects whichever account is currently active', () => {
     const other = store.users[2];
     setCurrentUser(other.username);
