@@ -91,7 +91,6 @@ export default function Header() {
               </Link>
             </li>
           ))}
-
           <li>
             <Link
               to="/profile"
@@ -106,7 +105,6 @@ export default function Header() {
               Profile
             </Link>
           </li>
-
           <li>
             <button
               onClick={handleLogout}
@@ -120,4 +118,3 @@ export default function Header() {
     </header>
   );
 }
-
