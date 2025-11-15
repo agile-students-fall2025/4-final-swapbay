@@ -11,10 +11,14 @@ export default function Profile() {
     return null;
   }
 
-  const handleLogout = () => {
-    logout();
-    toast.success('Logged out');
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logged out');
+      navigate('/login');
+    } catch (error) {
+      toast.error(error.message || 'Failed to logout');
+    }
   };
 
   return (
