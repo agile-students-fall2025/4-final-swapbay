@@ -5,7 +5,7 @@ import { mockUsers } from '../src/data/mockUsers.js';
 import { mockItems } from '../src/data/mockItems.js';
 import { mockOffers } from '../src/data/mockOffers.js';
 import { mockChats } from '../src/data/mockChats.js';
-// for testing purposes
+
 const clone = (data) => JSON.parse(JSON.stringify(data));
 const resetStore = () => {
   store.users = clone(mockUsers);
@@ -36,11 +36,7 @@ describe('My items routes', () => {
     headers: { 'Content-Type': 'application/json' },
     body: payload ? JSON.stringify(payload) : undefined,
   });
-
   const loginAs = (email, password = 'secret') => jsonRequest('/api/auth/login', 'POST', { email, password });
-
-  // make sure the dashboard only lists the things that belong to me
-  // Ensures the dashboard only lists the things that belong to me
   it('shows only my inventory on the “My Items” page', async () => {
     await loginAs('demo@swapbay.com', 'password123');
     const response = await fetch(`${baseURL}/api/me/items`);
@@ -48,9 +44,6 @@ describe('My items routes', () => {
     expect(response.status).to.equal(200);
     expect(body.items.every((item) => item.ownerUsername === 'swapdemo')).to.equal(true);
   });
-
-  // Adds a new item to my private inventory, then publishes and unlists it
-  // Walks through adding a new item, listing it, and unlisting back to draft
   it('lets me add gear, publish it, and pull it back down', async () => {
     await loginAs('demo@swapbay.com', 'password123');
     const createRes = await jsonRequest('/api/me/items', 'POST', {
@@ -72,13 +65,6 @@ describe('My items routes', () => {
     expect(unlistRes.status).to.equal(200);
     expect(unlistBody.item.status).to.equal('private');
   });
-
-
-
-
-
-  // add to private inventory   
-  // Protects me from editing items that are already live in the marketplace
   it('prevents editing when an item is already listed', async () => {
     await loginAs('demo@swapbay.com', 'password123');
     const editRes = await jsonRequest('/api/me/items/102', 'PUT', { title: 'Updated Title' });
@@ -87,4 +73,3 @@ describe('My items routes', () => {
     expect(editBody.message).to.equal('Cannot edit an item that is listed or included in active offers.');
   });
 });
-// this is 
