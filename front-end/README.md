@@ -50,7 +50,7 @@ swapbay-frontend/
 │   ├── context/          # React Contexts (Auth, Items, Offers, Chat)
 │   ├── layout/           # Global layout with Header/Footer
 │   ├── pages/            # All app screens (Home, Login, etc.)
-│   ├── utils/            # Mock data files
+│   ├── utils/            # API helpers / shared utilities
 │   ├── App.jsx           # Root app with router
 │   ├── main.jsx          # Vite entry point
 │   └── index.css         # TailwindCSS base styles
@@ -73,7 +73,7 @@ swapbay-frontend/
 
 ## Key Features Implemented
 - Authentication: Login, Register, Reset Password
-- Home Page: Search, filter, and view mock items
+- Home Page: Search, filter, and view live listings from the backend
 - My Items: Add/Edit/Delete, List, and manage visibility
 - Messaging: Chat interface with message threads
 - Offers: Make, view, cancel offers and accept/reject incoming ones
@@ -87,13 +87,18 @@ swapbay-frontend/
 - **React Router DOM**
 - **TailwindCSS**
 - **React Hot Toast** (for notifications)
-- Mock data with static JSON / Context state
+- REST API powered by the SwapBay Express backend
 
 ---
 
-### Development Notes
-- No backend API integration — state is stored locally in React Context.
-- Safe to refresh; data resets on reload.
+### Environment
+- The frontend expects the backend running on `http://localhost:3000`. Override with a `.env` file in `front-end/`:
+
+  ```
+  VITE_API_URL=http://localhost:3000
+  ```
+
+- Data persists for the lifetime of the backend server process (mock in-memory store).
 - Designed mobile-first, responsive to desktop.
 
 ---
