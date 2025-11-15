@@ -18,7 +18,7 @@ npm -v
 ---
 
 ### 2. Installation
-Clone the repo (if you haven’t) and install dependencies in the backend directory:
+Clone the repo (if you haven’t yet) and install dependencies in the backend directory:
 
 ```bash
 git clone https://github.com/agile-students-fall2025/4-final-swapbay
