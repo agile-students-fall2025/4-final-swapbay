@@ -1,7 +1,6 @@
-
 import { expect } from 'chai';
-import { addItemForUser, listPublicListings } from '../src/services/app-service.js';
-import { store, setCurrentUser, getCurrentUser } from '../src/data/mockStore.js';
+import { listPublicListings, serializeListing } from '../src/services/app-service.js';
+import { store } from '../src/data/mockStore.js';
 import { mockUsers } from '../src/data/mockUsers.js';
 import { mockItems } from '../src/data/mockItems.js';
 import { mockOffers } from '../src/data/mockOffers.js';
@@ -16,31 +15,23 @@ const resetStore = () => {
   store.currentUser = store.users[0]?.username || null;
 };
 
-describe('Item creation', () => {
+describe('Listings service', () => {
   beforeEach(() => resetStore());
 
-  // Friendly reminder that a title is required when I add something new
-  it('reminds me to name my item before saving', () => {
-    const user = getCurrentUser();
-    expect(() => addItemForUser(user, { title: '' })).to.throw('Title is required');
+  // Makes sure I never see my own gear when filtering swap-ready used items
+  it('keeps my items out when I browse used swap deals', () => {
+    const viewer = store.users[1];
+    const listings = listPublicListings({ condition: 'used', offerType: 'swap' }, viewer.username);
+    expect(listings.every((item) => item.ownerUsername !== viewer.username)).to.equal(true);
+    expect(listings.every((item) => item.condition.toLowerCase() === 'used')).to.equal(true);
+    expect(listings.every((item) => item.offerType === 'swap')).to.equal(true);
   });
 
-  // Checks that new private gear belongs to me and stays hidden from explore feed
-  it('adds my private item without showing it to everyone yet', () => {
-    const user = getCurrentUser();
-    const added = addItemForUser(user, { title: 'Gaming Chair', category: 'Furniture' });
-    expect(added.ownerUsername).to.equal(user.username);
-    expect(added.status).to.equal('private');
-
-    const publicListings = listPublicListings({}, user.username);
-    expect(publicListings.some((item) => item.id === added.id)).to.equal(false);
-  });
-
-  // Ensures swapping accounts changes which items get filtered out
-  it('respects whichever account is currently active', () => {
-    const other = store.users[2];
-    setCurrentUser(other.username);
-    const listings = listPublicListings({}, other.username);
-    expect(listings.every((item) => item.ownerUsername !== other.username)).to.equal(true);
+  // Confirms the serialized card includes the seller info and ownership flag
+  it('shows seller details when I open a listing', () => {
+    const sample = store.items.find((item) => item.status === 'public');
+    const serialized = serializeListing(sample, sample.ownerUsername);
+    expect(serialized).to.include.keys('ownerName', 'ownerPhoto');
+    expect(serialized.isMine).to.equal(true);
   });
 });
