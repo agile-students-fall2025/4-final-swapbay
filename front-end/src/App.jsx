@@ -3,7 +3,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ChatProvider } from './context/ChatContext';
 import { OfferProvider } from './context/OfferContext';
 import { ItemProvider } from './context/ItemContext';
-import { ReviewProvider } from './context/ReviewContext';
 
 // layout & protection
 import Layout from './layout/Layout';
@@ -29,7 +28,6 @@ import OfferComposer from './pages/OfferComposer';
 import AddItem from './pages/AddItem';
 import EditItem from './pages/EditItem';
 import ListingOffers from './pages/ListingOffers';
-import UserReviews from './pages/UserReviews';
 
 
 export default function App() {
@@ -37,11 +35,10 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <ReviewProvider>
-        <ChatProvider>
-          <OfferProvider>
-            <ItemProvider>
-              <Router>
+      <ChatProvider>
+        <OfferProvider>
+          <ItemProvider>
+            <Router>
               <Routes>
                 {/* ---------- Public (no header) ---------- */}
                 <Route path="/login" element={<Login />} />
@@ -189,22 +186,11 @@ export default function App() {
                     </ProtectedRoute>
                   }
                 />
-                <Route
-                  path="/users/:username/reviews"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <UserReviews />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
               </Routes>
             </Router>
           </ItemProvider>
         </OfferProvider>
       </ChatProvider>
-      </ReviewProvider>
     </AuthProvider>
   );
 }

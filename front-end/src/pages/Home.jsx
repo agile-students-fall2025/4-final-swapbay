@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useReviews } from '../context/ReviewContext';
 import toast from 'react-hot-toast';
 import { api } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
@@ -13,7 +12,6 @@ export default function Home() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { getAverageRating } = useReviews();
 
   const conditions = ['All', 'New', 'Like New', 'Good', 'Fair', 'Used'];
   const offerTypes = ['All', 'Money Only', 'Swap Only', 'Both'];
@@ -116,17 +114,19 @@ export default function Home() {
                     : 'Both 💵 + 🔁'}
                 </p>
 
-                <p className="text-gray-700 text-sm">{item.description}</p>
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-gray-400">
-                    <span>Owner: @{item.owner}</span>
-                    {getAverageRating(item.owner) > 0 && (
-                      <span className="flex items-center gap-1 text-yellow-600 font-semibold">
-                        ★ {getAverageRating(item.owner)}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                <p className="text-gray-700 text-sm overflow-hidden text-ellipsis whitespace-nowrap">
+                  {item.description}
+                </p>
+                <p className="text-xs text-gray-400">
+                  Owner:{' '}
+                  {item.owner === user?.username
+                    ? 'You'
+                    : `@${item.owner}${
+                        item.ownerName && item.owner !== user?.username
+                          ? ` (${item.ownerName})`
+                          : ''
+                      }`}
+                </p>
 
                 <div className="flex justify-between mt-3">
                   {item.isMine ? (
