@@ -1,36 +1,53 @@
-import { useState } from 'react';
-import { mockItems } from '../utils/mockItems';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useReviews } from '../context/ReviewContext';
 import toast from 'react-hot-toast';
+import { api } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
+  const { user } = useAuth();
   const [query, setQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [conditionFilter, setConditionFilter] = useState('All');
   const [offerTypeFilter, setOfferTypeFilter] = useState('All');
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { getAverageRating } = useReviews();
 
-  const categories = ['All', 'Electronics', 'Sports', 'Computers'];
+  const conditions = ['All', 'New', 'Like New', 'Good', 'Fair', 'Used'];
   const offerTypes = ['All', 'Money Only', 'Swap Only', 'Both'];
 
-  const filteredItems = mockItems.filter((item) => {
-    const matchesCategory =
-      categoryFilter === 'All' ||
-      item.category.toLowerCase() === categoryFilter.toLowerCase();
+  const fetchListings = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (query.trim()) params.append('search', query.trim());
+      if (conditionFilter !== 'All') params.append('condition', conditionFilter);
+      if (offerTypeFilter !== 'All') {
+        const map = {
+          'Money Only': 'money',
+          'Swap Only': 'swap',
+          Both: 'both',
+        };
+        params.append('offerType', map[offerTypeFilter] || 'all');
+      }
+      const path = params.toString()
+        ? `/api/listings?${params.toString()}`
+        : '/api/listings';
+      const data = await api.get(path);
+      const filtered = (data.items || []).filter((item) => !item.isMine);
+      setItems(filtered);
+    } catch (error) {
+      toast.error(error.message || 'Failed to load listings');
+    } finally {
+      setLoading(false);
+    }
+  }, [query, conditionFilter, offerTypeFilter]);
 
-    const matchesOfferType =
-      offerTypeFilter === 'All' ||
-      (offerTypeFilter === 'Money Only' && item.offerType === 'money') ||
-      (offerTypeFilter === 'Swap Only' && item.offerType === 'swap') ||
-      (offerTypeFilter === 'Both' && item.offerType === 'both');
-
-    const matchesQuery = item.title
-      .toLowerCase()
-      .includes(query.toLowerCase());
-
-    return matchesCategory && matchesOfferType && matchesQuery;
-  });
+  useEffect(() => {
+    fetchListings();
+  }, [fetchListings]);
 
   return (
     <div className="space-y-8">
@@ -46,11 +63,11 @@ export default function Home() {
 
         <div className="flex gap-3">
           <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
+            value={conditionFilter}
+            onChange={(e) => setConditionFilter(e.target.value)}
             className="border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           >
-            {categories.map((c) => (
+            {conditions.map((c) => (
               <option key={c}>{c}</option>
             ))}
           </select>
@@ -68,14 +85,16 @@ export default function Home() {
       </div>
 
       {/* Items Grid */}
-      {filteredItems.length === 0 ? (
+      {loading ? (
+        <p className="text-gray-600 text-center mt-10">Loading listings...</p>
+      ) : items.length === 0 ? (
         <p className="text-gray-600 text-center mt-10">No items found.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {filteredItems.map((item) => (
+          {items.map((item) => (
             <div
               key={item.id}
-              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition"
+              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition relative"
             >
               <img
                 src={item.image}
@@ -110,15 +129,24 @@ export default function Home() {
                 </div>
 
                 <div className="flex justify-between mt-3">
-                  <button
-                    onClick={() => navigate(`/offer/${item.id}`)}
-                    className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm"
-                  >
-                    Make Offer
-                  </button>
+                  {item.isMine ? (
+                    <button
+                      onClick={() => navigate('/my-listings')}
+                      className="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm"
+                    >
+                      Manage
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => navigate(`/offer/${item.id}`)}
+                      className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm"
+                    >
+                      Make Offer
+                    </button>
+                  )}
                   <Link
                     to={`/messages/${item.owner}`}
-                    className="text-blue-600 hover:underline text-sm"
+                    className="px-3 py-1 border border-blue-200 text-blue-600 rounded-md text-sm hover:bg-blue-50"
                   >
                     Message Owner
                   </Link>

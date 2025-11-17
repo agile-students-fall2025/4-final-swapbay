@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useItems } from '../context/ItemContext';
 import toast from 'react-hot-toast';
+import { readImageFile } from '../utils/image';
 
 const CATEGORIES = ['Electronics', 'Sports', 'Computers', 'Books', 'Home', 'Misc'];
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Used'];
@@ -20,20 +21,27 @@ export default function AddItem() {
 
   const onChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const onUpload = (e) => {
+  const onUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setForm(prev => ({ ...prev, image: reader.result }));
-    reader.readAsDataURL(file);
+    try {
+      const dataUrl = await readImageFile(file);
+      setForm(prev => ({ ...prev, image: dataUrl }));
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     if (!form.title.trim()) return toast.error('Title is required');
-    const id = addItem(form);
-    toast.success('Item added!');
-    navigate('/my-items');
+    try {
+      await addItem(form);
+      toast.success('Item added!');
+      navigate('/my-items');
+    } catch (error) {
+      toast.error(error.message || 'Failed to add item');
+    }
   };
 
   return (

@@ -1,25 +1,53 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useCallback } from 'react';
 import { useChat } from '../context/ChatContext';
-import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function Conversation() {
   const { username } = useParams();
-  const { getOrCreateChat, addMessage, chats } = useChat();
+  const { fetchConversation, addMessage } = useChat();
   const [chat, setChat] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const chatFound = getOrCreateChat(username);
-    setChat(chatFound);
-  }, [username, chats]);
+  const loadChat = useCallback(async () => {
+    setLoading(true);
+    try {
+      const convo = await fetchConversation(username);
+      setChat(convo);
+    } catch (error) {
+      toast.error(error.message || 'Unable to load conversation');
+      setChat(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchConversation, username]);
 
-  const handleSend = (e) => {
+  useEffect(() => {
+    loadChat();
+  }, [loadChat]);
+
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!messageText.trim()) return;
-    addMessage(username, messageText);
-    setMessageText('');
+
+    try {
+      await addMessage(username, messageText.trim());
+      setMessageText('');
+      await loadChat();
+    } catch (error) {
+      toast.error(error.message || 'Failed to send message');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="text-center mt-10 text-gray-600">
+        Loading conversation with @{username}...
+      </div>
+    );
+  }
 
   if (!chat)
     return (
@@ -34,7 +62,7 @@ export default function Conversation() {
     <div className="max-w-2xl mx-auto bg-white shadow rounded-xl overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b flex justify-between items-center">
-        <h1 className="text-xl font-bold text-blue-700">@{chat.user}</h1>
+        <h1 className="text-xl font-bold text-blue-700">@{chat.username}</h1>
         <button
           onClick={() => navigate('/messages')}
           className="text-blue-600 hover:underline text-sm"
@@ -45,33 +73,39 @@ export default function Conversation() {
 
       {/* Chat messages */}
       <div className="p-4 space-y-3 h-96 overflow-y-auto bg-gray-50">
-        {chat.messages.map((m, index) => (
-          <div
-            key={index}
-            className={`flex ${
-              m.sender === 'me' ? 'justify-end' : 'justify-start'
-            }`}
-          >
-            <div className="max-w-[70%]">
-              <div
-                className={`px-3 py-2 rounded-lg text-sm ${
-                  m.sender === 'me'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-800'
-                }`}
-              >
-                {m.text}
+        {chat.messages.length === 0 ? (
+          <p className="text-center text-gray-400 mt-20 text-sm">
+            No messages yet. Say hello!
+          </p>
+        ) : (
+          chat.messages.map((m, index) => (
+            <div
+              key={index}
+              className={`flex ${
+                m.sender === 'me' ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              <div className="max-w-[70%]">
+                <div
+                  className={`px-3 py-2 rounded-lg text-sm ${
+                    m.sender === 'me'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-800'
+                  }`}
+                >
+                  {m.text}
+                </div>
+                <p
+                  className={`text-xs text-gray-400 mt-1 ${
+                    m.sender === 'me' ? 'text-right' : 'text-left'
+                  }`}
+                >
+                  {new Date(m.timestamp).toLocaleString()}
+                </p>
               </div>
-              <p
-                className={`text-xs text-gray-400 mt-1 ${
-                  m.sender === 'me' ? 'text-right' : 'text-left'
-                }`}
-              >
-                {m.time}
-              </p>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Input bar */}

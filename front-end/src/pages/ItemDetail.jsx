@@ -6,6 +6,41 @@ export default function ItemDetail() {
   const { id } = useParams();
   const item = mockItems.find((i) => i.id === parseInt(id));
   const { getAverageRating } = useReviews();
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { api } from '../utils/api';
+
+export default function ItemDetail() {
+  const { id } = useParams();
+  const [item, setItem] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let ignore = false;
+    async function fetchItem() {
+      try {
+        const data = await api.get(`/api/listings/${id}`);
+        if (!ignore) setItem(data.item);
+      } catch (error) {
+        toast.error(error.message || 'Item not found');
+        if (!ignore) setItem(null);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+    fetchItem();
+    return () => {
+      ignore = true;
+    };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="text-center mt-10 text-gray-600">
+        Loading item details...
+      </div>
+    );
+  }
 
   if (!item) {
     return (
