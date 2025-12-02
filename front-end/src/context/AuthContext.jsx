@@ -1,37 +1,69 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { api } from '../utils/api';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = (email, password) => {
-    const demoUser = {
-      name: 'Demo User',
-      username: email.split('@')[0].toLowerCase(),
-      email,
-      photo: 'https://picsum.photos/200',
-    };
-    setUser(demoUser);
+  const fetchCurrentUser = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await api.get('/api/auth/me');
+      setUser(data.user);
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCurrentUser();
+  }, [fetchCurrentUser]);
+
+  const login = async (email, password) => {
+    const data = await api.post('/api/auth/login', { email, password });
+    setUser(data.user);
+    return data.user;
   };
 
-  const register = (email, username, password) => {
-    const demoUser = {
-      name: 'New User',
-      username: username.replace(/\s+/g, '').toLowerCase(),
-      email,
-      photo: 'https://picsum.photos/200',
-    };
-    setUser(demoUser);
+  const register = async ({ name, username, email, password }) => {
+    const payload = { name, username, email, password };
+    const data = await api.post('/api/auth/register', payload);
+    setUser(data.user);
+    return data.user;
   };
 
-  const logout = () => setUser(null);
-  const deleteAccount = () => setUser(null);
-  const updateProfile = (updates) => setUser((prev) => ({ ...prev, ...updates }));
+  const logout = async () => {
+    await api.post('/api/auth/logout');
+    setUser(null);
+  };
+
+  const deleteAccount = async () => {
+    await api.delete('/api/auth/me');
+    setUser(null);
+  };
+
+  const updateProfile = async (updates) => {
+    const data = await api.put('/api/auth/me', updates);
+    setUser(data.user);
+    return data.user;
+  };
 
   return (
     <AuthContext.Provider
-      value={{ user, login, register, logout, updateProfile, deleteAccount }}
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        logout,
+        updateProfile,
+        deleteAccount,
+        refreshUser: fetchCurrentUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

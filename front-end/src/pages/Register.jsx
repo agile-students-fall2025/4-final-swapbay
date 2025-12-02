@@ -12,16 +12,20 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !username || !email || !password) {
       toast.error('Please fill all fields.');
       return;
     }
 
-    register(email, username, password);
-    toast.success('Account created!');
-    navigate('/');
+    try {
+      await register({ name, username, email, password });
+      toast.success('Account created!');
+      navigate('/');
+    } catch (error) {
+      toast.error(error.message || 'Unable to register');
+    }
   };
 
   return (
