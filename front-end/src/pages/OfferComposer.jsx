@@ -80,7 +80,7 @@ export default function OfferComposer() {
     // Pull my offered item (only for swap/both)
     const myItem =
       selectedType === 'swap' || selectedType === 'both'
-        ? myOfferableItems.find((i) => i.id === parseInt(selectedItemId))
+        ? myOfferableItems.find((i) => i.id === selectedItemId)
         : null;
 
     try {
@@ -186,9 +186,9 @@ export default function OfferComposer() {
             {selectedType === 'money'
               ? `$${moneyAmount || '0'}`
               : selectedType === 'swap'
-              ? myOfferableItems.find((i) => i.id === parseInt(selectedItemId))?.title ||
+              ? myOfferableItems.find((i) => i.id === selectedItemId)?.title ||
                 'No item selected'
-              : `${myOfferableItems.find((i) => i.id === parseInt(selectedItemId))?.title ||
+              : `${myOfferableItems.find((i) => i.id === selectedItemId)?.title ||
                   'No item'} + $${moneyAmount || '0'}`}
           </p>
         </div>
