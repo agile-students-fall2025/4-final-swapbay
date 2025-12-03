@@ -11,24 +11,26 @@ export function ItemProvider({ children }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchItems = useCallback(async () => {
+  const fetchItems = useCallback(async ({ silent = false } = {}) => {
     if (!user) {
       setItems([]);
       return;
     }
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const data = await api.get('/api/me/items');
       setItems(data.items || []);
     } catch (error) {
       console.error('Failed to load items', error);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [user]);
 
   useEffect(() => {
     fetchItems();
+    const interval = setInterval(() => fetchItems({ silent: true }), 3000);
+    return () => clearInterval(interval);
   }, [fetchItems]);
 
   const listedItems = useMemo(
