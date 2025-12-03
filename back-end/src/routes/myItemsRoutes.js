@@ -1,126 +1,127 @@
 import express from 'express';
-import { store, getCurrentUser, findItemById } from '../data/mockStore.js';
-import { addItemForUser } from '../services/app-service.js';
+import { body, validationResult } from 'express-validator';
+import { Item, Offer } from '../models/index.js';
+import { authRequired } from '../middleware/auth.js';
+import { toListing } from '../utils/serializers.js';
 
 const router = express.Router();
 
-router.use((req, res, next) => {
-  const user = getCurrentUser();
-  if (!user) return res.status(401).json({ message: 'Not authenticated' });
-  req.currentUser = user;
-  next();
+const itemRules = [
+  body('title').trim().notEmpty().withMessage('Title is required'),
+  body('category').optional().isString(),
+  body('condition').optional().isString(),
+  body('description').optional().isString(),
+  body('image').optional().isString(),
+];
+
+router.use(authRequired);
+
+router.get('/', async (req, res) => {
+  const items = await Item.find({ owner: req.user._id }).sort({ createdAt: -1 }).lean();
+  res.json({ items: items.map((item) => toListing({ ...item, owner: req.user }, req.user.username)) });
 });
 
-router.get('/', (req, res) => {
-  const items = store.items.filter((item) => item.ownerUsername === req.currentUser.username);
-  res.json({ items });
-});
-
-router.post('/', (req, res) => {
-  try {
-    const item = addItemForUser(req.currentUser, req.body);
-    res.status(201).json({ item });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+router.post('/', itemRules, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ message: errors.array()[0].msg });
   }
+  const item = await Item.create({
+    owner: req.user._id,
+    title: req.body.title,
+    category: req.body.category || 'Misc',
+    condition: req.body.condition || 'Good',
+    description: req.body.description || '',
+    image: req.body.image || `https://picsum.photos/seed/${Date.now()}/600/400`,
+    status: 'private',
+    offerType: 'both',
+    available: true,
+  });
+  const populated = { ...item.toObject(), owner: req.user };
+  res.status(201).json({ item: toListing(populated, req.user.username) });
 });
 
-function ensureOwner(item, username) {
-  return item.ownerUsername === username;
-}
+router.put('/:id', itemRules, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ message: errors.array()[0].msg });
+  }
 
-function removeOutgoingOffersUsing(itemId) {
-  store.offers = store.offers.filter((offer) => offer.myItemId !== itemId);
-}
-
-function removeListingOffers(itemId) {
-  store.offers = store.offers.filter((offer) => offer.listingId !== itemId);
-}
-
-function ensureDraftState(item) {
-  item.status = 'private';
-  item.offerType = 'both';
-  item.unavailableReason = null;
-}
-
-router.put('/:id', (req, res) => {
-  const { id } = req.params;
-  const item = findItemById(id);
-  if (!item || !ensureOwner(item, req.currentUser.username)) {
+  const item = await Item.findById(req.params.id);
+  if (!item || !item.owner.equals(req.user._id)) {
     return res.status(404).json({ message: 'Item not found' });
   }
 
   const isListed = item.status === 'public';
-  const isOffered = store.offers.some(
-    (offer) => offer.myItemId === item.id && ['Pending', 'Accepted'].includes(offer.status),
-  );
+  const isOffered = await Offer.exists({
+    myItem: item._id,
+    status: { $in: ['Pending', 'Accepted'] },
+  });
 
   if (isListed || isOffered) {
     return res.status(409).json({ message: 'Cannot edit an item that is listed or included in active offers.' });
   }
 
-  const { title, category, condition, description, image } = req.body;
-  if (typeof title === 'string') item.title = title;
-  if (typeof category === 'string') item.category = category;
-  if (typeof condition === 'string') item.condition = condition;
-  if (typeof description === 'string') item.description = description;
-  if (typeof image === 'string') item.image = image;
+  const updates = {};
+  ['title', 'category', 'condition', 'description', 'image'].forEach((field) => {
+    if (typeof req.body[field] === 'string' && req.body[field].length > 0) {
+      updates[field] = req.body[field];
+    }
+  });
 
-  res.json({ item });
+  const updated = await Item.findByIdAndUpdate(item._id, updates, { new: true });
+  const populated = { ...updated.toObject(), owner: req.user };
+  res.json({ item: toListing(populated, req.user.username) });
 });
 
-router.delete('/:id', (req, res) => {
-  const { id } = req.params;
-  const item = findItemById(id);
-  if (!item || !ensureOwner(item, req.currentUser.username)) {
+router.delete('/:id', async (req, res) => {
+  const item = await Item.findById(req.params.id);
+  if (!item || !item.owner.equals(req.user._id)) {
     return res.status(404).json({ message: 'Item not found' });
   }
 
-  store.items = store.items.filter((candidate) => candidate.id !== item.id);
-  store.offers = store.offers.filter(
-    (offer) => offer.listingId !== item.id && offer.myItemId !== item.id,
-  );
-
+  await Offer.deleteMany({ $or: [{ listing: item._id }, { myItem: item._id }] });
+  await Item.findByIdAndDelete(item._id);
   res.json({ message: 'Item deleted' });
 });
 
-router.post('/:id/listing', (req, res) => {
-  const { id } = req.params;
+router.post('/:id/listing', async (req, res) => {
   const { offerType = 'both' } = req.body;
-  const item = findItemById(id);
-  if (!item || !ensureOwner(item, req.currentUser.username)) {
+  const item = await Item.findById(req.params.id);
+  if (!item || !item.owner.equals(req.user._id)) {
     return res.status(404).json({ message: 'Item not found' });
   }
-
   if (!item.available) {
     return res.status(400).json({ message: 'Unavailable items cannot be listed.' });
   }
-
   item.status = 'public';
   item.offerType = offerType;
-  res.json({ item });
+  await item.save();
+  const populated = { ...item.toObject(), owner: req.user };
+  res.json({ item: toListing(populated, req.user.username) });
 });
 
-router.post('/:id/unlist', (req, res) => {
-  const { id } = req.params;
-  const item = findItemById(id);
-  if (!item || !ensureOwner(item, req.currentUser.username)) {
+router.post('/:id/unlist', async (req, res) => {
+  const item = await Item.findById(req.params.id);
+  if (!item || !item.owner.equals(req.user._id)) {
     return res.status(404).json({ message: 'Item not found' });
   }
-  ensureDraftState(item);
-  removeListingOffers(item.id);
-  removeOutgoingOffersUsing(item.id);
-  res.json({ item });
+  item.status = 'private';
+  item.offerType = 'both';
+  item.unavailableReason = null;
+  await Offer.deleteMany({ listing: item._id });
+  await Offer.deleteMany({ myItem: item._id });
+  await item.save();
+  const populated = { ...item.toObject(), owner: req.user };
+  res.json({ item: toListing(populated, req.user.username) });
 });
 
-router.post('/:id/availability', (req, res) => {
-  const { id } = req.params;
+router.post('/:id/availability', async (req, res) => {
   const { available, reason = null } = req.body;
-  const item = findItemById(id);
-  if (!item || !ensureOwner(item, req.currentUser.username)) {
+  const item = await Item.findById(req.params.id);
+  if (!item || !item.owner.equals(req.user._id)) {
     return res.status(404).json({ message: 'Item not found' });
   }
-
   if (typeof available !== 'boolean') {
     return res.status(400).json({ message: 'available must be boolean' });
   }
@@ -129,15 +130,17 @@ router.post('/:id/availability', (req, res) => {
   if (!available) {
     item.status = 'private';
     item.unavailableReason = reason || 'sold';
-    removeListingOffers(item.id);
-    removeOutgoingOffersUsing(item.id);
+    await Offer.deleteMany({ listing: item._id });
+    await Offer.deleteMany({ myItem: item._id });
   } else {
-    ensureDraftState(item);
-    removeListingOffers(item.id);
-    removeOutgoingOffersUsing(item.id);
+    item.status = 'private';
+    item.unavailableReason = null;
+    await Offer.deleteMany({ listing: item._id });
+    await Offer.deleteMany({ myItem: item._id });
   }
-
-  res.json({ item });
+  await item.save();
+  const populated = { ...item.toObject(), owner: req.user };
+  res.json({ item: toListing(populated, req.user.username) });
 });
 
 export default router;
