@@ -28,7 +28,17 @@ npm install
 
 ---
 
-### 3. Running the Server
+### 3. Configure Environment & Database
+Create `.env` in `back-end/` (or copy from `.env.example`) with:
+```
+MONGODB_URI=<your MongoDB Atlas connection string>
+JWT_SECRET=<random-long-secret>
+PORT=3000
+```
+
+Provision a MongoDB Atlas cluster (or local MongoDB), create a database (e.g., `swapbay`), and whitelist your IP or configure network access. Use the provided URI in `MONGODB_URI`.
+
+### 4. Running the Server
 Start the Express server with:
 
 ```bash
@@ -41,16 +51,18 @@ Use `npm start` for the non-watching version in production-like environments.
 
 ---
 
-### 4. Project Structure
+### 5. Project Structure
 ```
 swapbay-backend/
 ├── src/
 │   ├── app.js             # Express app with middleware + static hosting
-│   ├── server.js          # Entry point that boots the server
-│   ├── data/              # In-memory mock data sets (users, items, offers, chats)
-│   ├── services/          # Domain logic (serialization, filtering, offer creation)
-│   └── routes/            # Express routers (auth, listings, offers, my-items, chats)
-├── tests/                 # Mocha + Chai suites (services + HTTP routes)
+│   ├── server.js          # Entry point that boots the server and DB connection
+│   ├── config/db.js       # Mongoose connection helper
+│   ├── middleware/auth.js # JWT auth + optional auth
+│   ├── models/            # Mongoose models (User, Item, Offer, Chat)
+│   ├── routes/            # Express routers (auth, listings, offers, my-items, chats)
+│   └── utils/serializers.js# Response shaping helpers
+├── tests/                 # Mocha + Chai + Supertest integration suites (uses in-memory Mongo)
 ├── public/                # Static assets shared with the frontend (logo, etc.)
 ├── package.json
 └── eslint.config.js
@@ -58,12 +70,12 @@ swapbay-backend/
 
 ---
 
-### 5. Available Scripts
+### 6. Available Scripts
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start server with Nodemon (hot reload) |
 | `npm start` | Start server with Node (no watch) |
-| `npm test` | Run the full Mocha/Chai suite |
+| `npm test` | Run the full Mocha/Chai + Supertest suite (boots in-memory Mongo) |
 | `npm run coverage` | Run tests with c8 coverage reporting |
 | `npm run lint` | Lint the project with ESLint + Airbnb rules |
 
@@ -80,14 +92,15 @@ swapbay-backend/
 ---
 
 ## Testing & Coverage
-- Tests live under `tests/` and are grouped by feature (auth, listings, my-items, offers, chats, store helpers).
+- Tests live under `tests/` and are grouped by feature (auth, listings, my-items, offers, chats).
+- Integration tests spin up an in-memory MongoDB instance (`mongodb-memory-server`) and hit real HTTP routes via Supertest.
 - Run `npm test` to execute all suites.
-- Run `npm run coverage` to collect code coverage with `c8` (currently ~90%+).
+- Run `npm run coverage` to collect code coverage with `c8`.
 
 ---
 
 ## Environment Notes
-- MongoDB Atlas is required; configure `MONGODB_URI` and `JWT_SECRET` in `.env`.
+- MongoDB Atlas (or local MongoDB) is required; configure `MONGODB_URI` and `JWT_SECRET` in `.env`.
 - The frontend expects this server at `http://localhost:3000`; adjust with a proxy or env vars if needed.
 - Static files are served from `public/` via `app.use(express.static(...))`.
 
@@ -99,8 +112,4 @@ Use the production start script to boot the API:
 npm install
 npm start
 ```
-Host on any Node-compatible provider (Render, Railway, Heroku, etc.). Since data is in-memory, restarting wipes the state—persist only if you later wire a real database.
-
----
-
-SwapBay Backend gives the frontend a consistent mock API surface so the entire marketplace experience can be demoed without external services.
+Host on any Node-compatible provider (Render, Railway, Heroku, etc.). Ensure environment variables include `MONGODB_URI`, `JWT_SECRET`, and optionally `PORT`.
