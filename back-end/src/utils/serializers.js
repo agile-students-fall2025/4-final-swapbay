@@ -48,4 +48,80 @@ function toSwapItem(item) {
   };
 }
 
-export { toPublicUser, toListing, toSwapItem, toId };
+function toOffer(offer, viewerUsername) {
+  if (!offer) return null;
+  const listing = offer.listing;
+  const seller = offer.seller;
+  const buyer = offer.buyer;
+  const swap = offer.myItem || offer.swapItemSnapshot;
+
+  const offerType = offer.offerType || 'money';
+  const amount = Number(offer.amount || 0);
+  let offeredFor = offer.offeredFor;
+  if (!offeredFor) {
+    if (offerType === 'swap') {
+      offeredFor = swap?.title || 'Swap Item';
+    } else if (offerType === 'both') {
+      offeredFor = `${swap?.title || 'Swap Item'} + $${amount}`;
+    } else {
+      offeredFor = `$${amount}`;
+    }
+  }
+
+  return {
+    id: toId(offer._id || offer.id),
+    listingId: toId(listing?._id || offer.listing || offer.listingId),
+    listingTitle: listing?.title || offer.listingTitleSnapshot || offer.listingTitle || '',
+    sellerUsername: seller?.username || offer.listingOwnerUsernameSnapshot || offer.sellerUsername,
+    buyerUsername: buyer?.username || offer.buyerUsername,
+    offerType,
+    amount,
+    myItemId: toId(offer.myItem?._id || offer.myItem),
+    swapItem: toSwapItem(offer.swapItemSnapshot || swap),
+    offeredFor,
+    status: offer.status || 'Pending',
+    note: offer.note || '',
+    createdAt: offer.createdAt,
+    target: listing
+      ? {
+          id: toId(listing._id || listing.id),
+          title: listing.title,
+          image: listing.image,
+          sellerUsername: listing.owner?.username || listing.ownerUsername,
+          sellerName: listing.owner?.name || null,
+          description: listing.description,
+          offerType: listing.offerType,
+          category: listing.category,
+          condition: listing.condition,
+          status: listing.status,
+          isMine: Boolean(
+            viewerUsername && (listing.owner?.username || listing.ownerUsername) === viewerUsername,
+          ),
+        }
+      : {
+          id: toId(offer.listing || offer.listingId),
+          title: offer.listingTitleSnapshot || offer.listingTitle || '',
+          sellerUsername: offer.listingOwnerUsernameSnapshot || offer.sellerUsername,
+        },
+    offeredItem: toSwapItem(offer.swapItemSnapshot || swap),
+    myItem: toSwapItem(offer.swapItemSnapshot || swap),
+    buyerName: buyer?.name || null,
+    buyerPhoto: buyer?.photo || null,
+    sellerName: seller?.name || null,
+    sellerPhoto: seller?.photo || null,
+  };
+}
+
+function toChatMessage(msg, currentUserId) {
+  const isRead =
+    Array.isArray(msg.readBy) &&
+    msg.readBy.some((id) => id?.toString?.() === currentUserId);
+  return {
+    sender: msg.sender?.toString?.() === currentUserId ? 'me' : 'them',
+    text: msg.text,
+    timestamp: msg.sentAt || msg.createdAt || msg.timestamp,
+    read: isRead,
+  };
+}
+
+export { toPublicUser, toListing, toOffer, toChatMessage, toId };
