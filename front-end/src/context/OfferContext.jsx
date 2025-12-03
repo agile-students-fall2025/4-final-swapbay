@@ -10,13 +10,13 @@ export function OfferProvider({ children }) {
   const [myOffers, setMyOffers] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchOffers = useCallback(async () => {
+  const fetchOffers = useCallback(async ({ silent = false } = {}) => {
     if (!user) {
       setOffers([]);
       setMyOffers([]);
       return;
     }
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const [incoming, outgoing] = await Promise.all([
         api.get('/api/offers/incoming'),
@@ -31,12 +31,14 @@ export function OfferProvider({ children }) {
     } catch (error) {
       console.error('Failed to load offers', error);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [user]);
 
   useEffect(() => {
     fetchOffers();
+    const interval = setInterval(() => fetchOffers({ silent: true }), 3000);
+    return () => clearInterval(interval);
   }, [fetchOffers]);
 
   const addOffer = async (payload) => {
