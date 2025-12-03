@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useChat } from '../context/ChatContext';
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { logout, user } = useAuth();
+  const { unreadTotal } = useChat();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -35,14 +37,21 @@ export default function Header() {
         {/* Desktop Navigation */}
         <ul className="hidden md:flex space-x-8 text-gray-700 font-medium items-center">
           {navLinks.map((link) => (
-            <li key={link.path}>
+            <li key={link.path} className="relative">
               <Link
                 to={link.path}
                 className={`hover:text-blue-600 transition ${
                   location.pathname === link.path ? 'text-blue-600' : ''
                 }`}
               >
-                {link.name}
+                <span className="relative inline-flex items-center">
+                  {link.name}
+                  {link.name === 'Messages' && unreadTotal > 0 && (
+                    <span className="absolute -top-2 -right-3 h-5 min-w-[20px] px-1 rounded-full bg-red-500 text-white text-[11px] leading-5 text-center">
+                      {unreadTotal > 9 ? '9+' : unreadTotal}
+                    </span>
+                  )}
+                </span>
               </Link>
             </li>
           ))}
@@ -82,13 +91,20 @@ export default function Header() {
       {menuOpen && (
         <ul className="md:hidden bg-white border-t text-gray-700 font-medium">
           {navLinks.map((link) => (
-            <li key={link.path}>
+            <li key={link.path} className="relative">
               <Link
                 to={link.path}
                 className="block p-3 border-b hover:bg-gray-100"
                 onClick={() => setMenuOpen(false)}
               >
-                {link.name}
+                <span className="relative inline-flex items-center">
+                  {link.name}
+                  {link.name === 'Messages' && unreadTotal > 0 && (
+                    <span className="ml-2 inline-flex items-center justify-center h-5 min-w-[20px] px-1 rounded-full bg-red-500 text-white text-[11px]">
+                      {unreadTotal > 9 ? '9+' : unreadTotal}
+                    </span>
+                  )}
+                </span>
               </Link>
             </li>
           ))}
