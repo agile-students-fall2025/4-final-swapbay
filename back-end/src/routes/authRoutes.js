@@ -1,115 +1,151 @@
 import express from 'express';
-import { store, sanitizeUser, getCurrentUser, setCurrentUser, nextId } from '../data/mockStore.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { body, validationResult } from 'express-validator';
+import { User, Item, Offer, Chat } from '../models/index.js';
+import { toPublicUser } from '../utils/serializers.js';
+import { authRequired } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.post('/login', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required.' });
+function signToken(userId) {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET is not configured');
+  return jwt.sign({ sub: userId }, secret, { expiresIn: '7d' });
+}
+
+const registrationRules = [
+  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('username').trim().notEmpty().withMessage('Username is required'),
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+];
+
+router.post('/register', registrationRules, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ message: errors.array()[0].msg });
   }
 
-  const user = store.users.find(
-    (candidate) => candidate.email.toLowerCase() === email.toLowerCase() && candidate.password === password,
-  );
-
-  if (!user) {
-    return res.status(401).json({ message: 'Invalid email or password.' });
-  }
-
-  setCurrentUser(user.username);
-  return res.json({ user: sanitizeUser(user) });
-});
-
-router.post('/register', (req, res) => {
   const { name, username, email, password } = req.body;
-
-  if (!name || !username || !email || !password) {
-    return res.status(400).json({ message: 'Name, username, email and password are required.' });
-  }
-
   const normalizedUsername = username.replace(/\s+/g, '').toLowerCase();
   const normalizedEmail = email.toLowerCase();
 
-  const usernameTaken = store.users.some((user) => user.username === normalizedUsername);
-  const emailTaken = store.users.some((user) => user.email === normalizedEmail);
-
-  if (usernameTaken || emailTaken) {
+  const existing = await User.findOne({
+    $or: [{ username: normalizedUsername }, { email: normalizedEmail }],
+  });
+  if (existing) {
     return res.status(409).json({ message: 'Username or email already exists.' });
   }
 
-  const newUser = {
-    id: nextId('users'),
+  const hashed = await bcrypt.hash(password, 10);
+  const user = await User.create({
     name,
     username: normalizedUsername,
     email: normalizedEmail,
-    password,
+    password: hashed,
     photo: `https://picsum.photos/seed/${normalizedUsername}/200/200`,
-  };
+  });
 
-  store.users.push(newUser);
-  setCurrentUser(newUser.username);
+  const token = signToken(user._id);
+  res.status(201).json({ token, user: toPublicUser(user) });
+});
 
-  return res.status(201).json({ user: sanitizeUser(newUser) });
+const loginRules = [
+  body('email').isEmail().withMessage('Email is required'),
+  body('password').notEmpty().withMessage('Password is required'),
+];
+
+router.post('/login', loginRules, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ message: errors.array()[0].msg });
+  }
+
+  const { email, password } = req.body;
+  const normalizedEmail = email.toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
+  if (!user) return res.status(401).json({ message: 'Invalid email or password.' });
+
+  const match = await bcrypt.compare(password, user.password);
+  if (!match) return res.status(401).json({ message: 'Invalid email or password.' });
+
+  const token = signToken(user._id);
+  res.json({ token, user: toPublicUser(user) });
 });
 
 router.post('/logout', (_req, res) => {
-  store.currentUser = null;
   res.json({ message: 'Logged out' });
 });
 
-router.get('/me', (_req, res) => {
-  const user = getCurrentUser();
-  if (!user) return res.status(401).json({ message: 'Not authenticated' });
-  res.json({ user: sanitizeUser(user) });
+router.get('/me', authRequired, (req, res) => {
+  res.json({ user: toPublicUser(req.user) });
 });
 
-router.put('/me', (req, res) => {
-  const user = getCurrentUser();
-  if (!user) return res.status(401).json({ message: 'Not authenticated' });
-
-  const { name, username, email, photo } = req.body;
-
-  if (username && username !== user.username) {
-    const normalizedUsername = username.replace(/\s+/g, '').toLowerCase();
-    const usernameTaken = store.users.some(
-      (candidate) => candidate.username === normalizedUsername && candidate.id !== user.id,
-    );
-    if (usernameTaken) {
-      return res.status(409).json({ message: 'Username already taken.' });
+router.put(
+  '/me',
+  authRequired,
+  [
+    body('email').optional().isEmail().withMessage('Invalid email'),
+    body('password').optional().isLength({ min: 6 }).withMessage('Password too short'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ message: errors.array()[0].msg });
     }
-    user.username = normalizedUsername;
-    setCurrentUser(normalizedUsername);
-  }
 
-  if (email && email !== user.email) {
-    const normalizedEmail = email.toLowerCase();
-    const emailTaken = store.users.some(
-      (candidate) => candidate.email === normalizedEmail && candidate.id !== user.id,
-    );
-    if (emailTaken) {
-      return res.status(409).json({ message: 'Email already taken.' });
+    const { name, username, email, password, photo } = req.body;
+    const updates = {};
+
+    if (typeof name === 'string') updates.name = name;
+    if (typeof photo === 'string') updates.photo = photo;
+
+    if (username && username !== req.user.username) {
+      const normalizedUsername = username.replace(/\s+/g, '').toLowerCase();
+      const usernameTaken = await User.exists({
+        username: normalizedUsername,
+        _id: { $ne: req.user._id },
+      });
+      if (usernameTaken) {
+        return res.status(409).json({ message: 'Username already taken.' });
+      }
+      updates.username = normalizedUsername;
     }
-    user.email = normalizedEmail;
+
+    if (email && email !== req.user.email) {
+      const normalizedEmail = email.toLowerCase();
+      const emailTaken = await User.exists({
+        email: normalizedEmail,
+        _id: { $ne: req.user._id },
+      });
+      if (emailTaken) {
+        return res.status(409).json({ message: 'Email already taken.' });
+      }
+      updates.email = normalizedEmail;
+    }
+
+    if (password) {
+      updates.password = await bcrypt.hash(password, 10);
+    }
+
+    const updated = await User.findByIdAndUpdate(req.user._id, updates, { new: true });
+    res.json({ user: toPublicUser(updated) });
+  },
+);
+
+router.delete('/me', authRequired, async (req, res) => {
+  const userId = req.user._id;
+  await Offer.deleteMany({ $or: [{ buyer: userId }, { seller: userId }] });
+  const ownedItems = await Item.find({ owner: userId }, '_id');
+  const ownedItemIds = ownedItems.map((it) => it._id);
+  if (ownedItemIds.length) {
+    await Offer.deleteMany({ listing: { $in: ownedItemIds } });
+    await Offer.deleteMany({ myItem: { $in: ownedItemIds } });
   }
-
-  if (typeof name === 'string') user.name = name;
-  if (typeof photo === 'string') user.photo = photo;
-
-  res.json({ user: sanitizeUser(user) });
-});
-
-router.delete('/me', (_req, res) => {
-  const user = getCurrentUser();
-  if (!user) return res.status(401).json({ message: 'Not authenticated' });
-
-  store.users = store.users.filter((candidate) => candidate.id !== user.id);
-  store.items = store.items.filter((item) => item.ownerUsername !== user.username);
-  store.offers = store.offers.filter(
-    (offer) => offer.buyerUsername !== user.username && offer.sellerUsername !== user.username,
-  );
-  store.currentUser = null;
-
+  await Item.deleteMany({ owner: userId });
+  await Chat.deleteMany({ participants: userId });
+  await User.findByIdAndDelete(userId);
   res.json({ message: 'Account deleted' });
 });
 
