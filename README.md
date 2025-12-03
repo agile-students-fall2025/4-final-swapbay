@@ -89,7 +89,36 @@ npm run dev
 The app will open at:  
 http://localhost:5173/
 
-**More Setup information will come in the future.**
+### Running the Backend API
+
+```bash
+# From repo root
+cd back-end
+
+# Install dependencies
+npm install
+
+# Start the API (reload on changes)
+npm run dev
+
+# Or run once for production-style start
+npm start
+```
+The API listens on http://localhost:3000/ by default (configurable through the `PORT` env var).
+
+#### Backend Testing & Linting
+
+```bash
+# Run unit/integration tests
+npm test
+
+# Generate coverage report
+npm run coverage
+
+# Lint the codebase
+npm run lint
+```
+Test output and coverage artifacts stay inside `back-end/tests` and `back-end/coverage`.
 
 ---
 
@@ -124,4 +153,3 @@ For detailed contribution guidelines, please see the [CONTRIBUTING.md](./CONTRIB
 > “Not everyone has cash, but everyone has something to trade.”
 
 ---
-
