@@ -1,5 +1,19 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
+const TOKEN_KEY = 'swapbay_token';
+
+function getToken() {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+function setToken(token) {
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+}
+
 async function request(path, options = {}) {
   const url = `${API_BASE_URL}${path}`;
   const config = { ...options };
@@ -8,6 +22,11 @@ async function request(path, options = {}) {
     Accept: 'application/json',
     ...(options.headers || {}),
   };
+
+  const token = getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
 
   if (config.body && !config.headers['Content-Type']) {
     config.headers['Content-Type'] = 'application/json';
@@ -22,6 +41,9 @@ async function request(path, options = {}) {
   }
 
   if (!response.ok) {
+    if (response.status === 401) {
+      setToken(null);
+    }
     const message = payload?.message || `Request to ${path} failed`;
     throw new Error(message);
   }
@@ -42,7 +64,8 @@ export const api = {
       ...(typeof body !== 'undefined' ? { body: JSON.stringify(body) } : {}),
     }),
   delete: (path) => request(path, { method: 'DELETE' }),
+  setToken,
+  getToken,
 };
 
 export { API_BASE_URL };
-
