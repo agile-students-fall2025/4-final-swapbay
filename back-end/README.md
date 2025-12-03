@@ -1,6 +1,6 @@
 # SwapBay Backend
 
-The **SwapBay Backend** is an Express.js mock API that powers the SwapBay marketplace. It exposes authentication, listings, offers, items, and messaging routes and serves shared static assets for the frontend.
+The **SwapBay Backend** is an Express.js API that powers the SwapBay marketplace. It exposes authentication, listings, offers, items, and messaging routes, persists data in MongoDB Atlas via Mongoose, and serves shared static assets for the frontend.
 
 ---
 
@@ -70,14 +70,12 @@ swapbay-backend/
 ---
 
 ## Key Features
-- Authentication: login, register, profile update, delete, logout (mock session)
+- Authentication: login, register, profile update, delete, logout via JWT
 - Listings: public search/filter, detail view, offers per listing
 - My Items: add/edit/delete, list/unlist, availability toggles
 - Offers: incoming/outgoing views, create/cancel/accept/reject/delete
 - Messaging: inbox summaries, per-thread view, send message mirroring
 - Static assets: backend serves shared images and logos for the frontend
-
-Everything runs in-memory using the mock data, which makes the backend deterministic for demos and tests.
 
 ---
 
@@ -89,9 +87,9 @@ Everything runs in-memory using the mock data, which makes the backend determini
 ---
 
 ## Environment Notes
-- No database required—mock data is reloaded each time the process starts.
+- MongoDB Atlas is required; configure `MONGODB_URI` and `JWT_SECRET` in `.env`.
 - The frontend expects this server at `http://localhost:3000`; adjust with a proxy or env vars if needed.
-- Static files (e.g., branding assets) are served from `public/` via `app.use(express.static(...))`.
+- Static files are served from `public/` via `app.use(express.static(...))`.
 
 ---
 

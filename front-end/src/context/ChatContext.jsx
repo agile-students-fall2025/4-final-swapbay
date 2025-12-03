@@ -1,61 +1,49 @@
-import { createContext, useContext, useState } from 'react';
-import { mockChats as initialChats } from '../utils/mockChats';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { api } from '../utils/api';
+import { useAuth } from './AuthContext';
 
 const ChatContext = createContext();
 
 export function ChatProvider({ children }) {
-  const [chats, setChats] = useState(initialChats);
+  const { user } = useAuth();
+  const [chats, setChats] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Helper to get a readable time string
-  const timeNow = () => {
-    const date = new Date();
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  // Find or create a chat by username (no duplicates)
-  const getOrCreateChat = (username) => {
-    let chat = chats.find((c) => c.user === username);
-    if (!chat) {
-      chat = {
-        id: chats.length + 1,
-        user: username,
-        lastMessage: 'New conversation started',
-        time: timeNow(),
-        messages: [
-          { sender: 'me', text: 'Hey there!', time: timeNow() },
-          { sender: username, text: 'Hi! Nice to connect.', time: timeNow() },
-        ],
-      };
-      setChats((prev) => {
-        // prevent duplicates just in case
-        if (prev.find((c) => c.user === username)) return prev;
-        return [...prev, chat];
-      });
+  const fetchChats = useCallback(async () => {
+    if (!user) {
+      setChats([]);
+      return;
     }
-    return chat;
-  };
+    setLoading(true);
+    try {
+      const data = await api.get('/api/chats');
+      setChats(data.chats || []);
+    } catch (error) {
+      console.error('Failed to load chats', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
-  // Add a message to an existing chat
-  const addMessage = (username, messageText) => {
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.user === username
-          ? {
-              ...chat,
-              lastMessage: messageText,
-              time: timeNow(),
-              messages: [
-                ...chat.messages,
-                { sender: 'me', text: messageText, time: timeNow() },
-              ],
-            }
-          : chat
-      )
-    );
-  };
+  useEffect(() => {
+    fetchChats();
+  }, [fetchChats]);
+
+  const fetchConversation = useCallback(async (username) => {
+    const data = await api.get(`/api/chats/${username}`);
+    return data.chat;
+  }, []);
+
+  const addMessage = useCallback(
+    async (username, text) => {
+      await api.post(`/api/chats/${username}/messages`, { text });
+      await fetchChats();
+    },
+    [fetchChats]
+  );
 
   return (
-    <ChatContext.Provider value={{ chats, getOrCreateChat, addMessage }}>
+    <ChatContext.Provider value={{ chats, fetchChats, fetchConversation, addMessage, loading }}>
       {children}
     </ChatContext.Provider>
   );
