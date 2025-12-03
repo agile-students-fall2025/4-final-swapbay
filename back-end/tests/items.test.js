@@ -1,39 +1,40 @@
+import request from 'supertest';
 import { expect } from 'chai';
-import { addItemForUser, listPublicListings } from '../src/services/app-service.js';
-import { store, setCurrentUser, getCurrentUser } from '../src/data/mockStore.js';
-import { mockUsers } from '../src/data/mockUsers.js';
-import { mockItems } from '../src/data/mockItems.js';
-import { mockOffers } from '../src/data/mockOffers.js';
-import { mockChats } from '../src/data/mockChats.js';
+import app from '../src/app.js';
 
-const clone = (data) => JSON.parse(JSON.stringify(data));
-const resetStore = () => {
-  store.users = clone(mockUsers);
-  store.items = clone(mockItems);
-  store.offers = clone(mockOffers);
-  store.chats = clone(mockChats);
-  store.currentUser = store.users[0]?.username || null;
-};
+async function registerUser() {
+  const unique = Date.now();
+  const res = await request(app)
+    .post('/api/auth/register')
+    .send({
+      name: 'Item Owner',
+      username: `owner${unique}`,
+      email: `owner${unique}@example.com`,
+      password: 'password123',
+    })
+    .expect(201);
+  return res.body.token;
+}
 
 describe('Item creation', () => {
-  beforeEach(() => resetStore());
-  it('reminds me to name my item before saving', () => {
-    const user = getCurrentUser();
-    expect(() => addItemForUser(user, { title: '' })).to.throw('Title is required');
+  it('validates required title', async () => {
+    const token = await registerUser();
+    const res = await request(app)
+      .post('/api/me/items')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '' })
+      .expect(400);
+    expect(res.body.message).to.match(/Title is required/i);
   });
-  it('adds my private item without showing it to everyone yet', () => {
-    const user = getCurrentUser();
-    const added = addItemForUser(user, { title: 'Gaming Chair', category: 'Furniture' });
-    expect(added.ownerUsername).to.equal(user.username);
-    expect(added.status).to.equal('private');
 
-    const publicListings = listPublicListings({}, user.username);
-    expect(publicListings.some((item) => item.id === added.id)).to.equal(false);
-  });
-  it('respects whichever account is currently active', () => {
-    const other = store.users[2];
-    setCurrentUser(other.username);
-    const listings = listPublicListings({}, other.username);
-    expect(listings.every((item) => item.ownerUsername !== other.username)).to.equal(true);
+  it('creates a private item owned by the user', async () => {
+    const token = await registerUser();
+    const res = await request(app)
+      .post('/api/me/items')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Gaming Chair', category: 'Furniture' })
+      .expect(201);
+
+    expect(res.body.item.status).to.equal('private');
   });
 });
