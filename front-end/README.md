@@ -98,7 +98,7 @@ swapbay-frontend/
   VITE_API_URL=http://localhost:3000
   ```
 
-- Data persists for the lifetime of the backend server process (mock in-memory store).
+- Data persists in MongoDB via the backend API (configure `MONGODB_URI`/`JWT_SECRET` in `back-end/.env`).
 - Designed mobile-first, responsive to desktop.
 
 ---
@@ -111,3 +111,4 @@ npm run build
 ```
 
 The compiled static files will appear in the `dist/` directory.
+
