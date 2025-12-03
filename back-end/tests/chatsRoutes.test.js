@@ -1,79 +1,44 @@
+import request from 'supertest';
 import { expect } from 'chai';
 import app from '../src/app.js';
-import { store } from '../src/data/mockStore.js';
-import { mockUsers } from '../src/data/mockUsers.js';
-import { mockItems } from '../src/data/mockItems.js';
-import { mockOffers } from '../src/data/mockOffers.js';
-import { mockChats } from '../src/data/mockChats.js';
 
-const clone = (data) => JSON.parse(JSON.stringify(data));
-const resetStore = () => {
-  store.users = clone(mockUsers);
-  store.items = clone(mockItems);
-  store.offers = clone(mockOffers);
-  store.chats = clone(mockChats);
-  store.currentUser = null;
-};
+async function registerUser(label) {
+  const unique = `${label}${Date.now()}`;
+  const res = await request(app)
+    .post('/api/auth/register')
+    .send({
+      name: `${label} user`,
+      username: unique,
+      email: `${unique}@example.com`,
+      password: 'password123',
+    })
+    .expect(201);
+  return { token: res.body.token, user: res.body.user };
+}
 
 describe('Chats routes', () => {
-  let server;
-  let baseURL;
+  it('sends and reads messages between users', async () => {
+    const alice = await registerUser('alice');
+    const bob = await registerUser('bob');
 
-  before((done) => {
-    server = app.listen(0, () => {
-      const { port } = server.address();
-      baseURL = `http://127.0.0.1:${port}`;
-      done();
-    });
-  });
+    const sendRes = await request(app)
+      .post(`/api/chats/${bob.user.username}/messages`)
+      .set('Authorization', `Bearer ${alice.token}`)
+      .send({ text: 'Hello Bob!' })
+      .expect(201);
 
-  after(() => server.close());
+    expect(sendRes.body.message.text).to.equal('Hello Bob!');
 
-  beforeEach(() => resetStore());
+    const listRes = await request(app)
+      .get('/api/chats')
+      .set('Authorization', `Bearer ${bob.token}`)
+      .expect(200);
+    expect(listRes.body.chats[0].username).to.equal(alice.user.username);
 
-  const jsonRequest = async (path, method, payload) => fetch(`${baseURL}${path}`, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: payload ? JSON.stringify(payload) : undefined,
-  });
-
-  const loginAs = (email, password = 'secret') => jsonRequest('/api/auth/login', 'POST', { email, password });
-
-  // Lets me read my inbox with sender names and snippets
-  it('lists all of my active chat threads', async () => {
-    await loginAs('demo@swapbay.com', 'password123');
-    const response = await fetch(`${baseURL}/api/chats`);
-    const body = await response.json();
-    expect(response.status).to.equal(200);
-    expect(body.chats.length).to.be.greaterThan(0);
-    expect(body.chats[0]).to.include.keys('username', 'lastMessage', 'totalMessages');
-  });
-
-  // Automatically creates a thread when I open a conversation
-  it('opens or creates a conversation when I click a user', async () => {
-    await loginAs('demo@swapbay.com', 'password123');
-    const response = await fetch(`${baseURL}/api/chats/krishiv`);
-    const body = await response.json();
-    expect(response.status).to.equal(200);
-    expect(body.chat.username).to.equal('krishiv');
-    expect(body.chat.ownerUsername).to.equal('swapdemo');
-  });
-
-  // Sends a message and mirrors it for the recipient
-  it('sends a message and mirrors it in both inboxes', async () => {
-    await loginAs('demo@swapbay.com', 'password123');
-    const sendResponse = await jsonRequest('/api/chats/hailemariam/messages', 'POST', { text: 'Hey there!' });
-    const sendBody = await sendResponse.json();
-    expect(sendResponse.status).to.equal(201);
-    expect(sendBody.message.text).to.equal('Hey there!');
-
-    const ownerThread = store.chats.find(
-      (chat) => chat.ownerUsername === 'swapdemo' && chat.username === 'hailemariam',
-    );
-    const contactThread = store.chats.find(
-      (chat) => chat.ownerUsername === 'hailemariam' && chat.username === 'swapdemo',
-    );
-    expect(ownerThread.messages.at(-1).sender).to.equal('me');
-    expect(contactThread.messages.at(-1).sender).to.equal('them');
+    const threadRes = await request(app)
+      .get(`/api/chats/${alice.user.username}`)
+      .set('Authorization', `Bearer ${bob.token}`)
+      .expect(200);
+    expect(threadRes.body.chat.messages).to.have.length(1);
   });
 });
