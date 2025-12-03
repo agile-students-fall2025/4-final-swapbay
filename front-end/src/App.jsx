@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
 import { ChatProvider } from './context/ChatContext';
 import { OfferProvider } from './context/OfferContext';
 import { ItemProvider } from './context/ItemContext';
@@ -31,166 +30,162 @@ import ListingOffers from './pages/ListingOffers';
 
 
 export default function App() {
-  const { user } = useAuth?.() || {}; // prevent hook error if not wrapped yet
-
   return (
-    <AuthProvider>
-      <ChatProvider>
-        <OfferProvider>
-          <ItemProvider>
-            <Router>
-              <Routes>
-                {/* ---------- Public (no header) ---------- */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/reset-password" element={<ResetPasswordRequest />} />
-                <Route path="/reset-password-confirm" element={<ResetPasswordConfirm />} />
+    <ChatProvider>
+      <OfferProvider>
+        <ItemProvider>
+          <Router>
+            <Routes>
+              {/* ---------- Public (no header) ---------- */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/reset-password" element={<ResetPasswordRequest />} />
+              <Route path="/reset-password-confirm" element={<ResetPasswordConfirm />} />
 
-                {/* ---------- Protected Routes (require login) ---------- */}
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <Home />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
+              {/* ---------- Protected Routes (require login) ---------- */}
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Home />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
 
-                <Route
-                  path="/my-items"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <MyItems />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
+              <Route
+                path="/my-items"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <MyItems />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
 
-                <Route
-                  path="/items/:id"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <ItemDetail />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
+              <Route
+                path="/items/:id"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <ItemDetail />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
 
-                <Route
-                  path="/messages"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <Messages />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
+              <Route
+                path="/messages"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Messages />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
 
-                <Route
-                  path="/messages/:username"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <Conversation />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
+              <Route
+                path="/messages/:username"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Conversation />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
 
-                <Route
-                  path="/my-listings"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <MyListings />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
+              <Route
+                path="/my-listings"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <MyListings />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
 
-                <Route
-                  path="/my-offers"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <MyOffers />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
+              <Route
+                path="/my-offers"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <MyOffers />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
 
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <Profile />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Profile />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
 
-                <Route
-                  path="/edit-profile"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <EditProfile />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
+              <Route
+                path="/edit-profile"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <EditProfile />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
 
-                <Route
-                  path="/offer/:id"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <OfferComposer />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/add-item"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <AddItem />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/edit-item/:id"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <EditItem />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/listing/:id/offers"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <ListingOffers />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-            </Router>
-          </ItemProvider>
-        </OfferProvider>
-      </ChatProvider>
-    </AuthProvider>
+              <Route
+                path="/offer/:id"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <OfferComposer />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/add-item"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <AddItem />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/edit-item/:id"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <EditItem />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/listing/:id/offers"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <ListingOffers />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </Router>
+        </ItemProvider>
+      </OfferProvider>
+    </ChatProvider>
   );
 }

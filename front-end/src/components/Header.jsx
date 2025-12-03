@@ -26,9 +26,10 @@ export default function Header() {
       <nav className="max-w-6xl mx-auto flex justify-between items-center p-4">
         <Link
           to="/"
-          className="text-2xl font-extrabold text-blue-600 tracking-tight"
+          className="text-2xl font-extrabold text-blue-600 tracking-tight flex items-center gap-2"
         >
-          SwapBay
+          <img src="/vite.svg" alt="SwapBay logo" className="h-8 w-auto" />
+          <span>SwapBay</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -120,4 +121,3 @@ export default function Header() {
     </header>
   );
 }
-

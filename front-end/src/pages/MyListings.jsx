@@ -1,20 +1,28 @@
 import { useNavigate } from 'react-router-dom';
 import { useItems } from '../context/ItemContext';
+import { useOffers } from '../context/OfferContext';
 import toast from 'react-hot-toast';
 
 export default function MyListings() {
   const navigate = useNavigate();
-  const { listedItems, removeFromListing } = useItems();
+  const { listedItems, removeFromListing, loading } = useItems();
+  const { offers } = useOffers();
 
-  const handleUnlist = id => {
-    removeFromListing(id);
-    toast.success('Item unlisted');
+  const handleUnlist = async (id) => {
+    try {
+      await removeFromListing(id);
+      toast.success('Item unlisted');
+    } catch (error) {
+      toast.error(error.message || 'Failed to update listing');
+    }
   };
 
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">My Listings</h1>
-      {listedItems.length === 0 ? (
+      {loading ? (
+        <p className="text-gray-500">Loading listings...</p>
+      ) : listedItems.length === 0 ? (
         <p className="text-gray-500">No public listings yet.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -54,7 +62,12 @@ export default function MyListings() {
                     onClick={() => navigate(`/listing/${item.id}/offers`)}
                     className="flex-1 bg-blue-600 text-white py-1 rounded-md hover:bg-blue-700 text-sm"
                   >
-                    Offers
+                    {(() => {
+                      const pendingCount = offers.filter(
+                        (offer) => offer.listingId === item.id && offer.status === 'Pending'
+                      ).length;
+                      return pendingCount > 0 ? `Offers (${pendingCount})` : 'Offers';
+                    })()}
                   </button>
                 </div>
               </div>
@@ -65,4 +78,3 @@ export default function MyListings() {
     </div>
   );
 }
-
