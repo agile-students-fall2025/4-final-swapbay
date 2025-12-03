@@ -7,7 +7,6 @@ import { api } from '../utils/api';
 
 export default function ListingOffers() {
   const { id } = useParams();
-  const itemId = parseInt(id);
   const navigate = useNavigate();
   const { refreshItems } = useItems();
   const { acceptOffer, rejectOffer } = useOffers();
@@ -21,7 +20,7 @@ export default function ListingOffers() {
   const loadOffers = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api.get(`/api/listings/${itemId}/offers`);
+      const data = await api.get(`/api/listings/${id}/offers`);
       setItem(data.item);
       setItemOffers(data.offers || []);
     } catch (error) {
@@ -31,7 +30,7 @@ export default function ListingOffers() {
     } finally {
       setLoading(false);
     }
-  }, [itemId]);
+  }, [id]);
 
   useEffect(() => {
     loadOffers();
@@ -80,6 +79,8 @@ export default function ListingOffers() {
     }
   };
 
+  const visibleOffers = itemOffers.filter((offer) => offer.status === 'Pending');
+
   return (
     <div className="max-w-3xl mx-auto bg-white shadow-md rounded-2xl overflow-hidden">
       {/* Listing header */}
@@ -99,13 +100,13 @@ export default function ListingOffers() {
 
       {/* Offers section */}
       <div className="p-6">
-        {itemOffers.length === 0 ? (
+        {visibleOffers.length === 0 ? (
           <p className="text-gray-500 text-center">
             No offers have been made for this item yet.
           </p>
         ) : (
           <div className="space-y-4">
-            {itemOffers.map((offer) => (
+            {visibleOffers.map((offer) => (
               <div
                 key={offer.id}
                 className="border rounded-lg p-4 hover:shadow-sm transition"
