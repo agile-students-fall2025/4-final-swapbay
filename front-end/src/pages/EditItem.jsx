@@ -3,6 +3,7 @@ import { useItems } from '../context/ItemContext';
 import { useOffers } from '../context/OfferContext';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { readImageFile } from '../utils/image';
 
 const CATEGORIES = ['Electronics', 'Sports', 'Computers', 'Books', 'Home', 'Misc'];
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Used'];
@@ -13,7 +14,7 @@ export default function EditItem() {
   const { items, editItem, isItemOffered } = useItems();
   const { offers } = useOffers();
 
-  const item = items.find((i) => i.id === parseInt(id));
+  const item = items.find((i) => i.id === id);
   const [form, setForm] = useState(() => ({
     title: item?.title || '',
     category: item?.category || 'Misc',
@@ -38,15 +39,18 @@ export default function EditItem() {
 
   const onChange = (e) => setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const onUpload = (e) => {
+  const onUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setForm((prev) => ({ ...prev, image: reader.result }));
-    reader.readAsDataURL(file);
+    try {
+      const dataUrl = await readImageFile(file);
+      setForm((prev) => ({ ...prev, image: dataUrl }));
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     const offered = isItemOffered(item.title, offers);
     const listed = item.status === 'public';
@@ -54,9 +58,13 @@ export default function EditItem() {
       toast.error('Cannot edit an item that is offered or listed.');
       return;
     }
-    editItem(item.id, form, offers);
-    toast.success('Item updated!');
-    navigate('/my-items');
+    try {
+      await editItem(item.id, form, offers);
+      toast.success('Item updated!');
+      navigate('/my-items');
+    } catch (error) {
+      toast.error(error.message || 'Failed to update item');
+    }
   };
 
   return (
