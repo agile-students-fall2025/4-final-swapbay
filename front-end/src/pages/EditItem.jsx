@@ -14,7 +14,7 @@ export default function EditItem() {
   const { items, editItem, isItemOffered } = useItems();
   const { offers } = useOffers();
 
-  const item = items.find((i) => i.id === parseInt(id));
+  const item = items.find((i) => i.id === id);
   const [form, setForm] = useState(() => ({
     title: item?.title || '',
     category: item?.category || 'Misc',
