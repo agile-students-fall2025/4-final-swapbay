@@ -55,15 +55,11 @@ The project follows an Agile/SCRUM development process, with iterative sprints, 
 
 **Core Functionality**
 - User registration, login, and profile management  
-- Ability to post and manage item listings with descriptions and images  
-- Three offer types: cash offers and swap offers, and both  
+- Post and manage item listings with descriptions and images  
+- Three offer types: cash, swap, or both  
 - Offer review system with acceptance and rejection 
-- Search and filtering of listings by category, price, or keywords   
-
-**Additional Features (planned)**
-- In-app messaging between users before confirming transactions  
-
- 
+- Search and filtering of listings by category, keywords, or condition  
+- In-app messaging between users
 
 These features together provide a comprehensive and user-friendly marketplace experience.
 
@@ -90,6 +86,14 @@ The app will open at:
 http://localhost:5173/
 
 ### Running the Backend API
+The backend now uses MongoDB (via Mongoose). Set up environment variables before starting:
+```
+cd back-end
+cp .env.example .env   # if provided, or create .env manually
+MONGODB_URI=<your MongoDB connection string>
+JWT_SECRET=<random-long-secret>
+PORT=3000
+```
 
 ```bash
 # From repo root
