@@ -1,9 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useMemo } from 'react';
-import { mockItems } from '../utils/mockItems'; // marketplace items w/ owner (seller)
+import { useState, useMemo, useEffect } from 'react';
 import { useItems } from '../context/ItemContext'; // YOUR items (dynamic)
 import { useOffers } from '../context/OfferContext';
 import toast from 'react-hot-toast';
+import { api } from '../utils/api';
 
 export default function OfferComposer() {
   const { id } = useParams();
@@ -11,22 +11,48 @@ export default function OfferComposer() {
   const { items } = useItems();
   const { addOffer } = useOffers();
 
-  const targetItem = useMemo(
-    () => mockItems.find((i) => i.id === parseInt(id)),
-    [id]
-  );
+  const [targetItem, setTargetItem] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Only allow swapping with items that are private (not listed) so it’s realistic
-  const myPrivateItems = useMemo(
-    () => items.filter((i) => i.status === 'private'),
+  // Allow swapping with any of my available items (listed or private)
+  const myOfferableItems = useMemo(
+    () => items.filter((i) => i.available),
     [items]
   );
 
-  const [selectedType, setSelectedType] = useState(
-    targetItem?.offerType === 'both' ? 'money' : targetItem?.offerType || 'money'
-  );
+  const [selectedType, setSelectedType] = useState('money');
   const [moneyAmount, setMoneyAmount] = useState('');
   const [selectedItemId, setSelectedItemId] = useState('');
+
+  useEffect(() => {
+    let ignore = false;
+    async function fetchListing() {
+      try {
+        const data = await api.get(`/api/listings/${id}`);
+        if (!ignore) {
+          setTargetItem(data.item);
+          const defaultType =
+            data.item.offerType === 'both' ? 'money' : data.item.offerType;
+          setSelectedType(defaultType);
+        }
+      } catch (error) {
+        toast.error(error.message || 'Listing not available');
+        if (!ignore) setTargetItem(null);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+    fetchListing();
+    return () => {
+      ignore = true;
+    };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="text-center mt-10 text-gray-600">Loading listing...</div>
+    );
+  }
 
   if (!targetItem) {
     return (
@@ -42,7 +68,7 @@ export default function OfferComposer() {
     );
   }
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     // Validate based on chosen type
     if ((selectedType === 'money' || selectedType === 'both') && !moneyAmount.trim()) {
       return toast.error('Please enter an offer amount.');
@@ -54,39 +80,21 @@ export default function OfferComposer() {
     // Pull my offered item (only for swap/both)
     const myItem =
       selectedType === 'swap' || selectedType === 'both'
-        ? myPrivateItems.find((i) => i.id === parseInt(selectedItemId))
+        ? myOfferableItems.find((i) => i.id === selectedItemId)
         : null;
 
-    // Build full outgoing-offer object (matches mockMyOffers schema)
-    const newOffer = {
-      id: Date.now(),
-      status: 'Pending',                 // 'Pending' | 'Accepted' | 'Rejected' | 'Canceled'
-      offerType: selectedType,           // 'money' | 'swap' | 'both'
-      amount: Number(moneyAmount) || 0,  // used for money/both
-      myItemId: myItem?.id || null,
-      myItem: myItem
-        ? {
-            id: myItem.id,
-            title: myItem.title,
-            category: myItem.category,
-            condition: myItem.condition || 'Good',
-            description: myItem.description || '',
-            image: myItem.image,
-          }
-        : null,
-      target: {
-        title: targetItem.title,
-        sellerUsername: targetItem.owner,
-        category: targetItem.category,
-        condition: targetItem.condition,
-        description: targetItem.description,
-        image: targetItem.image,
-      },
-    };
-
-    addOffer(newOffer);
-    toast.success('Offer created successfully!');
-    navigate('/my-offers');
+    try {
+      await addOffer({
+        listingId: targetItem.id,
+        offerType: selectedType,
+        amount: Number(moneyAmount) || 0,
+        myItemId: myItem?.id || null,
+      });
+      toast.success('Offer created successfully!');
+      navigate('/my-offers');
+    } catch (error) {
+      toast.error(error.message || 'Failed to create offer');
+    }
   };
 
   return (
@@ -148,11 +156,11 @@ export default function OfferComposer() {
         {(selectedType === 'swap' || selectedType === 'both') && (
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-700">
-              Select Item to Swap (from your private items)
+              Select Item to Swap (from your available items)
             </label>
-            {myPrivateItems.length === 0 ? (
+            {myOfferableItems.length === 0 ? (
               <p className="text-gray-500 text-sm">
-                You have no private items available. Go to <b>My Items</b> to add one.
+                You have no available items. Go to <b>My Items</b> to add one.
               </p>
             ) : (
               <select
@@ -161,7 +169,7 @@ export default function OfferComposer() {
                 className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               >
                 <option value="">-- Choose an item --</option>
-                {myPrivateItems.map((i) => (
+                {myOfferableItems.map((i) => (
                   <option key={i.id} value={i.id}>
                     {i.title} ({i.category})
                   </option>
@@ -178,9 +186,9 @@ export default function OfferComposer() {
             {selectedType === 'money'
               ? `$${moneyAmount || '0'}`
               : selectedType === 'swap'
-              ? myPrivateItems.find((i) => i.id === parseInt(selectedItemId))?.title ||
+              ? myOfferableItems.find((i) => i.id === selectedItemId)?.title ||
                 'No item selected'
-              : `${myPrivateItems.find((i) => i.id === parseInt(selectedItemId))?.title ||
+              : `${myOfferableItems.find((i) => i.id === selectedItemId)?.title ||
                   'No item'} + $${moneyAmount || '0'}`}
           </p>
         </div>
