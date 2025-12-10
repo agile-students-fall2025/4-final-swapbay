@@ -9,16 +9,20 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
       toast.error('Please fill in both fields.');
       return;
     }
 
-    login(email, password);
-    toast.success('Welcome back!');
-    navigate('/');
+    try {
+      await login(email, password);
+      toast.success('Welcome back!');
+      navigate('/');
+    } catch (error) {
+      toast.error(error.message || 'Unable to log in');
+    }
   };
 
   return (
