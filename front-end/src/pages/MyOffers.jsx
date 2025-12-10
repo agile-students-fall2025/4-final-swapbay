@@ -16,9 +16,10 @@ const statusBadge = (status) => {
 };
 
 export default function MyOffers() {
-  const { myOffers, cancelMyOffer, deleteOffer, loading } = useOffers();
+  const { myOffers, cancelMyOffer, loading } = useOffers();
   const { items } = useItems();
   const [open, setOpen] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('All');
 
   const getMyItem = (myItemId) => items.find((i) => i.id === myItemId);
   const sortedOffers = useMemo(
@@ -27,6 +28,13 @@ export default function MyOffers() {
         (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
       ),
     [myOffers]
+  );
+  const filteredOffers = useMemo(
+    () =>
+      sortedOffers.filter((offer) =>
+        statusFilter === 'All' ? true : offer.status === statusFilter
+      ),
+    [sortedOffers, statusFilter]
   );
 
   const renderDetails = (offer) => (
@@ -90,14 +98,27 @@ export default function MyOffers() {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">My Offers</h1>
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-sm text-gray-600">Filter by status:</span>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="text-sm border rounded-md px-2 py-1"
+        >
+          <option>All</option>
+          <option>Pending</option>
+          <option>Accepted</option>
+          <option>Rejected</option>
+        </select>
+      </div>
       {loading ? (
         <p className="text-gray-500">Loading your offers...</p>
-      ) : sortedOffers.length === 0 ? (
+      ) : filteredOffers.length === 0 ? (
         <p className="text-gray-500">No offers made yet.</p>
       ) : (
         <div className="space-y-4">
-            {sortedOffers.map((offer) => (
-              <div key={offer.id} className="bg-white border rounded-2xl shadow-sm overflow-hidden">
+          {filteredOffers.map((offer) => (
+            <div key={offer.id} className="bg-white border rounded-2xl shadow-sm overflow-hidden">
               <div className="flex flex-col sm:flex-row">
                 {offer.target ? (
                   <img
@@ -156,22 +177,15 @@ export default function MyOffers() {
                     )}
 
                   <div className="flex gap-2">
-                      <Link
-                        to={
-                          offer.status === 'Pending' && offer.target
-                            ? `/messages/${offer.target.sellerUsername}`
-                            : '#'
-                        }
-                      aria-disabled={offer.status !== 'Pending'}
+                    <Link
+                      to={offer.target ? `/messages/${offer.target.sellerUsername}` : '#'}
                       className={`flex-1 px-3 py-2 text-xs rounded-md border border-blue-200 text-blue-600 text-center ${
-                        offer.status !== 'Pending'
-                          ? 'opacity-50 cursor-not-allowed pointer-events-none'
-                          : 'hover:bg-blue-50'
+                        offer.target ? 'hover:bg-blue-50' : 'opacity-50 cursor-not-allowed'
                       }`}
                     >
                       Message Seller
                     </Link>
-                    {offer.status === 'Pending' ? (
+                    {offer.status === 'Pending' && (
                       <button
                         onClick={async () => {
                           try {
@@ -185,20 +199,6 @@ export default function MyOffers() {
                         disabled={!offer.target}
                       >
                         Cancel Offer
-                      </button>
-                    ) : (
-                      <button
-                        onClick={async () => {
-                          try {
-                            await deleteOffer(offer.id);
-                            toast('Offer removed.');
-                          } catch (error) {
-                            toast.error(error.message || 'Failed to delete offer');
-                          }
-                        }}
-                        className="flex-1 px-3 py-2 text-xs rounded-md bg-gray-800 text-white hover:bg-gray-900"
-                      >
-                        Delete
                       </button>
                     )}
                   </div>
