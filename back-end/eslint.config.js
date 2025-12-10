@@ -1,5 +1,4 @@
 /* eslint-disable import/no-extraneous-dependencies, import/no-unresolved */
-import { defineConfig } from 'eslint/config';
 import { FlatCompat } from '@eslint/eslintrc';
 import globals from 'globals';
 import { fileURLToPath } from 'url';
@@ -12,7 +11,7 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
-export default defineConfig([
+export default [
   ...compat.config({ extends: ['airbnb-base'] }),
   {
     languageOptions: {
@@ -42,4 +41,4 @@ export default defineConfig([
       },
     },
   },
-]);
+];

@@ -45,7 +45,7 @@ export function ChatProvider({ children }) {
   );
 
   const fetchConversation = useCallback(
-    async (username, { silent = false } = {}) => {
+    async (username) => {
       const data = await api.get(`/api/chats/${username}`);
       cacheConversation(data.chat);
       await refreshChats({ silent: true });
