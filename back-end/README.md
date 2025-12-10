@@ -22,11 +22,11 @@ Add these to `.env` in `back-end/`:
 MONGODB_URI=<mongodb connection string>
 JWT_SECRET=<random-long-secret>
 PORT=3000
-FRONTEND_URL=http://localhost:5173   # used to build reset links
+FRONTEND_URL=http://localhost:5173   # use your deployed URL in prod
 SENDGRID_API_KEY=<sendgrid-api-key>  # required for forgot-password
 SENDGRID_FROM_EMAIL=<verified-from-address@yourdomain.com>
-NODE_ENV=development
-JWT_EXPIRES_IN=7d
+NODE_ENV=production                  # set to production in deployments
+JWT_EXPIRES_IN=7d                    # adjust as needed
 ```
 - SendGrid values are needed only for the live forgot/reset password flow (tests skip the outbound call).
 - Atlas or local MongoDB both work; ensure `MONGODB_URI` is reachable from where you run the server.
@@ -50,7 +50,7 @@ Health check: `GET /health`.
 ## API surface (high level)
 - `/api/auth` — register, login, logout, get/update/delete profile, forgot-password, reset-password.
 - `/api/listings` — list/search listings, view detail, and related offers.
-- `/api/me/items` — CRUD and availability toggles for the authenticated user’s items.
+- `/api/me/items` — CRUD and availability toggles for the authenticated user's items.
 - `/api/offers` — create/cancel/accept/reject/delete offers.
 - `/api/chats` — messaging threads (participant scoped).
 - `/api/uploads` — authenticated image uploads (avatars/items) returning a public URL.
@@ -87,8 +87,9 @@ back-end/
 - `npm run coverage` reports coverage with c8.
 
 ## Deployment
-1. `npm install`
-2. Set environment variables (`MONGODB_URI`, `JWT_SECRET`, `PORT`, `FRONTEND_URL`, SendGrid values).
-3. `npm start`
+1. `npm ci`
+2. Set environment variables (`MONGODB_URI`, `JWT_SECRET`, `PORT`, `FRONTEND_URL`, SendGrid values, `NODE_ENV=production`).
+3. Start with your process manager of choice (e.g., `pm2 start src/server.js --name swapbay-api`).
 
-Deploy to any Node-friendly host (Render, Railway, Heroku, etc.). Ensure `public/` is served and writable for uploads if users will upload images.
+Deploy to any Node-friendly host (Droplet with Nginx/PM2, Render, Railway, etc.). Ensure `public/` is served and writable for uploads if users will upload images.
+
