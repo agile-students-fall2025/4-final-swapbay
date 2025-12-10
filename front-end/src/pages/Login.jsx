@@ -8,8 +8,6 @@ export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const demoEmail = 'demo@swapbay.com';
-  const demoPassword = 'password123';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -80,24 +78,7 @@ export default function Login() {
           >
             Log In
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setEmail(demoEmail);
-              setPassword(demoPassword);
-              toast.success('Demo credentials filled in');
-            }}
-            className="w-full border border-blue-200 text-blue-700 py-2 rounded-md font-medium hover:bg-blue-50 transition"
-          >
-            Use Demo Account
-          </button>
         </form>
-
-        <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-700">
-          <p className="font-semibold mb-1">Demo credentials</p>
-          <p>Email: {demoEmail}</p>
-          <p>Password: {demoPassword}</p>
-        </div>
 
         {/* Register Link */}
         <p className="text-sm text-gray-600 text-center mt-6">
