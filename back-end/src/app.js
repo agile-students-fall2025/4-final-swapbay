@@ -10,6 +10,7 @@ import listingsRoutes from './routes/listingsRoutes.js';
 import myItemsRoutes from './routes/myItemsRoutes.js';
 import offersRoutes from './routes/offersRoutes.js';
 import chatsRoutes from './routes/chatsRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 
 const app = express();
 
