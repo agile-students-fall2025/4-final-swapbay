@@ -1,115 +1,94 @@
 # SwapBay Backend
 
-The **SwapBay Backend** is an Express.js API that powers the SwapBay marketplace. It exposes authentication, listings, offers, items, and messaging routes, persists data in MongoDB Atlas via Mongoose, and serves shared static assets for the frontend.
+Express + MongoDB API that powers the SwapBay marketplace. It handles auth, listings, offers, chats, image uploads, and password reset emails for the frontend.
 
 ---
 
-### 1. Prerequisites
-Install the following tools:
-- [Node.js](https://nodejs.org/) (version 18+ recommended)
-- npm (bundled with Node)
+## Stack
+- Node.js 18+, Express, MongoDB Atlas (via Mongoose), JWT, Multer for uploads, SendGrid for password reset emails
+- Tests: Mocha + Chai + Supertest + mongodb-memory-server
 
-Verify your environment:
+## Quickstart
 ```bash
-node -v
-npm -v
-```
-
----
-
-### 2. Installation
-Clone the repo (if you haven’t already) and install dependencies in the backend directory:
-
-```bash
-git clone https://github.com/agile-students-fall2025/4-final-swapbay
+node -v && npm -v    # verify Node/npm (Node 18+ recommended)
 cd back-end
 npm install
+cp .env.example .env # then fill in values below
 ```
 
----
-
-### 3. Configure Environment & Database
-Create `.env` in `back-end/` (or copy from `.env.example`) with:
+## Environment
+Add these to `.env` in `back-end/`:
 ```
-MONGODB_URI=<your MongoDB Atlas connection string>
+MONGODB_URI=<mongodb connection string>
 JWT_SECRET=<random-long-secret>
 PORT=3000
+FRONTEND_URL=http://localhost:5173   # used to build reset links
+SENDGRID_API_KEY=<sendgrid-api-key>  # required for forgot-password
+SENDGRID_FROM_EMAIL=<verified-from-address@yourdomain.com>
+NODE_ENV=development
+JWT_EXPIRES_IN=7d
 ```
+- SendGrid values are needed only for the live forgot/reset password flow (tests skip the outbound call).
+- Atlas or local MongoDB both work; ensure `MONGODB_URI` is reachable from where you run the server.
 
-Provision a MongoDB Atlas cluster (or local MongoDB), create a database (e.g., `swapbay`), and whitelist your IP or configure network access. Use the provided URI in `MONGODB_URI`.
-
-### 4. Running the Server
-Start the Express server with:
-
+## Run
 ```bash
-npm run dev
+npm run dev   # nodemon reloads on changes, serves on http://localhost:3000
+npm start     # plain node for production-like runs
 ```
+Health check: `GET /health`.
 
-This runs `src/server.js` with Nodemon on **http://localhost:3000**.
+## Scripts
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start server with Nodemon |
+| `npm start` | Start server with Node |
+| `npm test` | Mocha/Chai + Supertest against an in-memory MongoDB |
+| `npm run coverage` | Test coverage via c8 |
+| `npm run lint` | ESLint (Airbnb base) |
 
-Use `npm start` for the non-watching version in production-like environments.
+## API surface (high level)
+- `/api/auth` — register, login, logout, get/update/delete profile, forgot-password, reset-password.
+- `/api/listings` — list/search listings, view detail, and related offers.
+- `/api/me/items` — CRUD and availability toggles for the authenticated user’s items.
+- `/api/offers` — create/cancel/accept/reject/delete offers.
+- `/api/chats` — messaging threads (participant scoped).
+- `/api/uploads` — authenticated image uploads (avatars/items) returning a public URL.
 
----
+## File uploads
+- Endpoints: `POST /api/uploads/avatar` and `POST /api/uploads/item`.
+- Auth required; send `multipart/form-data` with the `image` field.
+- Accepts JPEG/PNG/WEBP up to 5 MB; files are stored under `public/uploads/avatars` or `public/uploads/items` and served at `/uploads/...`.
 
-### 5. Project Structure
+## Password reset (SendGrid)
+1. Configure `SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL`, and `FRONTEND_URL` in `.env`.
+2. `POST /api/auth/forgot-password` with `{ email }` to send a reset link to `${FRONTEND_URL}/reset-password-confirm?token=...`.
+3. `POST /api/auth/reset-password` with `{ token, password }` to set the new password.
+
+## Project Structure
 ```
-swapbay-backend/
+back-end/
 ├── src/
-│   ├── app.js             # Express app with middleware + static hosting
-│   ├── server.js          # Entry point that boots the server and DB connection
-│   ├── config/db.js       # Mongoose connection helper
-│   ├── middleware/auth.js # JWT auth + optional auth
-│   ├── models/            # Mongoose models (User, Item, Offer, Chat)
-│   ├── routes/            # Express routers (auth, listings, offers, my-items, chats)
-│   └── utils/serializers.js# Response shaping helpers
-├── tests/                 # Mocha + Chai + Supertest integration suites (uses in-memory Mongo)
-├── public/                # Static assets shared with the frontend (logo, etc.)
+│   ├── app.js               # Express app + middleware + static hosting
+│   ├── server.js            # Entry point (server + DB bootstrap)
+│   ├── config/db.js         # Mongoose connection helper
+│   ├── middleware/auth.js   # JWT auth + optional auth helpers
+│   ├── models/              # Mongoose models (User, Item, Offer, Chat)
+│   ├── routes/              # auth, listings, my-items, offers, chats, uploads
+│   └── utils/               # serializers, email sender (SendGrid)
+├── public/                  # Static assets + uploads/ for user images
+├── tests/                   # Mocha/Chai/Supertest suites (in-memory Mongo)
 ├── package.json
 └── eslint.config.js
 ```
 
----
-
-### 6. Available Scripts
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start server with Nodemon (hot reload) |
-| `npm start` | Start server with Node (no watch) |
-| `npm test` | Run the full Mocha/Chai + Supertest suite (boots in-memory Mongo) |
-| `npm run coverage` | Run tests with c8 coverage reporting |
-| `npm run lint` | Lint the project with ESLint + Airbnb rules |
-
----
-
-## Key Features
-- Authentication: login, register, profile update, delete, logout via JWT
-- Listings: public search/filter, detail view, offers per listing
-- My Items: add/edit/delete, list/unlist, availability toggles
-- Offers: incoming/outgoing views, create/cancel/accept/reject/delete
-- Messaging: inbox summaries, per-thread view, send message mirroring
-- Static assets: backend serves shared images and logos for the frontend
-
----
-
-## Testing & Coverage
-- Tests live under `tests/` and are grouped by feature (auth, listings, my-items, offers, chats).
-- Integration tests spin up an in-memory MongoDB instance (`mongodb-memory-server`) and hit real HTTP routes via Supertest.
-- Run `npm test` to execute all suites.
-- Run `npm run coverage` to collect code coverage with `c8`.
-
----
-
-## Environment Notes
-- MongoDB Atlas (or local MongoDB) is required; configure `MONGODB_URI` and `JWT_SECRET` in `.env`.
-- The frontend expects this server at `http://localhost:3000`; adjust with a proxy or env vars if needed.
-- Static files are served from `public/` via `app.use(express.static(...))`.
-
----
+## Testing
+- `npm test` spins up an isolated `mongodb-memory-server` instance and hits HTTP routes via Supertest.
+- `npm run coverage` reports coverage with c8.
 
 ## Deployment
-Use the production start script to boot the API:
-```bash
-npm install
-npm start
-```
-Host on any Node-compatible provider (Render, Railway, Heroku, etc.). Ensure environment variables include `MONGODB_URI`, `JWT_SECRET`, and optionally `PORT`.
+1. `npm install`
+2. Set environment variables (`MONGODB_URI`, `JWT_SECRET`, `PORT`, `FRONTEND_URL`, SendGrid values).
+3. `npm start`
+
+Deploy to any Node-friendly host (Render, Railway, Heroku, etc.). Ensure `public/` is served and writable for uploads if users will upload images.
