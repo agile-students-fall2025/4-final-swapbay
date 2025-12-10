@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from './AuthContext';
@@ -52,11 +53,6 @@ export function OfferProvider({ children }) {
     await fetchOffers();
   };
 
-  const deleteOfferHistory = async (offerId) => {
-    await api.delete(`/api/offers/${offerId}`);
-    await fetchOffers();
-  };
-
   const rejectOffer = async (offerId) => {
     await api.post(`/api/offers/${offerId}/reject`);
     await fetchOffers();
@@ -77,7 +73,6 @@ export function OfferProvider({ children }) {
         myOffers,
         addOffer,
         cancelMyOffer,
-        deleteOffer: deleteOfferHistory,
         refreshOffers: fetchOffers,
         loading,
       }}
