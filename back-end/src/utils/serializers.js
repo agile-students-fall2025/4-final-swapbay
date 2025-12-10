@@ -13,6 +13,13 @@ function toPublicUser(user) {
   };
 }
 
+function sanitizeImage(url) {
+  if (!url || typeof url !== 'string') return '';
+  if (url.startsWith('data:')) return '';
+  if (url.length > 5000) return '';
+  return url;
+}
+
 function toListing(item, viewerUsername) {
   if (!item) return null;
   const owner = item.owner || item.ownerUsername;
@@ -27,7 +34,7 @@ function toListing(item, viewerUsername) {
     category: item.category,
     condition: item.condition,
     description: item.description,
-    image: item.image,
+    image: sanitizeImage(item.image),
     status: item.status,
     offerType: item.offerType,
     available: item.available,
