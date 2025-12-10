@@ -16,6 +16,7 @@ export default function MyItems() {
   } = useItems();
   const { offers: incomingOffers } = useOffers();
   const [selectOfferTypeFor, setSelectOfferTypeFor] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('All');
 
   // Compute item labels dynamically
   const itemsWithLabels = useMemo(() => {
@@ -74,6 +75,17 @@ export default function MyItems() {
 
   const handleDelete = async (id) => {
     const it = items.find((i) => i.id === id);
+    if (!it) {
+      return;
+    }
+    if (it.status === 'public') {
+      toast.error('Listed items cannot be deleted. Unlist first.');
+      return;
+    }
+    if (!it.available || it.unavailableReason) {
+      toast.error('Sold or swapped items cannot be deleted.');
+      return;
+    }
     try {
       await deleteItem(id);
       if (it) toast.success(`Deleted "${it.title}"`);
@@ -111,13 +123,36 @@ export default function MyItems() {
       </div>
 
       {/* Items Grid */}
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-sm text-gray-600">Filter:</span>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="text-sm border rounded-md px-2 py-1"
+        >
+          <option>All</option>
+          <option>Listed</option>
+          <option>Draft</option>
+          <option>Sold/Swapped</option>
+        </select>
+      </div>
+
       {loading ? (
         <p className="text-gray-500">Loading your items...</p>
       ) : itemsWithLabels.length === 0 ? (
         <p className="text-gray-500">No items yet.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {itemsWithLabels.map((item) => (
+          {itemsWithLabels
+            .filter((item) => {
+              if (statusFilter === 'All') return true;
+              if (statusFilter === 'Listed') return item.__listed && item.available;
+              if (statusFilter === 'Draft')
+                return item.available && !item.__listed && !item.__status;
+              if (statusFilter === 'Sold/Swapped') return !item.available || item.__status;
+              return true;
+            })
+            .map((item) => (
             <div
               key={item.id}
               className={`bg-white shadow rounded-xl overflow-hidden hover:shadow-lg transition relative ${
@@ -211,21 +246,18 @@ export default function MyItems() {
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="flex-1 text-sm px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                          disabled={item.__listed}
+                          className={`flex-1 text-sm px-3 py-2 rounded-md ${
+                            item.__listed
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : 'bg-red-600 text-white hover:bg-red-700'
+                          }`}
                         >
                           Delete
                         </button>
                       </div>
                     </>
-                  ) : (
-                    // Delete (History)
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="w-full text-sm px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
-                    >
-                      Delete (History)
-                    </button>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* Offer Type Selector (when listing) */}
