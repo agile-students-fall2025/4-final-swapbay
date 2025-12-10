@@ -16,7 +16,7 @@ function signToken(userId) {
   return jwt.sign({ sub: userId }, secret, { expiresIn: '7d' });
 }
 
-const RESET_TOKEN_EXPIRATION_MS = 1000 * 60 * 60; // 1 hour
+const RESET_TOKEN_EXPIRATION_MS = 1000 * 60 * 60;
 
 function buildResetUrl(token) {
   const baseUrl =
