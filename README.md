@@ -57,15 +57,36 @@ The project follows an Agile/SCRUM development process, with iterative sprints, 
 
 ---
 
+These features together provide a comprehensive and user-friendly marketplace experience.
+
+---
+
 ## Product Features
 
-**Core Functionality**
-- User registration, login, and profile management  
-- Post and manage item listings with descriptions and images  
-- Three offer types: cash, swap, or both  
-- Offer review system with acceptance and rejection 
-- Search and filtering of listings by category, keywords, or condition  
-- In-app messaging between users
+**Accounts & Profile**  
+- Register/login/logout with JWT sessions plus forgot/reset password emails  
+- Edit name, username, email, and avatar; delete account with data cleanup  
+
+**Listings & Items**  
+- Add items with category, condition, description, and uploaded images  
+- Keep items as private drafts or publish/unlist with seller offer type (money, swap, both)  
+- Mark items sold/swapped and block edits while listed or included in offers  
+
+**Browse & Discovery**  
+- Home feed of public listings (excludes your own) with search and filters by condition and offer type  
+- Listing cards show owner info with quick actions to message or make an offer  
+
+**Offers**  
+- Compose offers using cash, one of your items, or both; pick from available personal items  
+- Track outgoing offers with status filters and cancel pending ones  
+- Review incoming offers per listing, accept/reject; acceptance marks items unavailable and rejects competing offers  
+
+**Messaging & Notifications**  
+- Inbox with unread counts and per-conversation threads  
+- Direct messages between buyers and sellers plus system messages for offer updates  
+
+**Media Uploads**  
+- Authenticated uploads for avatars and item photos (JPEG/PNG/WEBP) served from `/uploads`
 
 These features together provide a comprehensive and user-friendly marketplace experience.
 
@@ -168,3 +189,4 @@ For detailed contribution guidelines, please see the [CONTRIBUTING.md](./CONTRIB
 > "Not everyone has cash, but everyone has something to trade."
 
 ---
+
