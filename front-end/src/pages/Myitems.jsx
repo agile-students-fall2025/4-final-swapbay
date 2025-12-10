@@ -52,6 +52,7 @@ export default function MyItems() {
 
   // Handlers
   const handleAddToListing = (id) => setSelectOfferTypeFor(id);
+  
 
   const confirmListing = async (id, sellerOfferType) => {
     try {
