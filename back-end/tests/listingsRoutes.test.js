@@ -55,7 +55,10 @@ describe('Listings routes', () => {
     const { token } = await registerUser('offer-seller');
     const listingId = await createPublicListing(token, { title: 'Laptop' });
 
-    const offersRes = await request(app).get(`/api/listings/${listingId}/offers`).expect(200);
+    const offersRes = await request(app)
+      .get(`/api/listings/${listingId}/offers`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
     expect(offersRes.body.item.title).to.equal('Laptop');
     expect(offersRes.body.offers).to.be.an('array');
   });
