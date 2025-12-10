@@ -1,6 +1,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const TOKEN_KEY = 'swapbay_token';
+let onUnauthorized = null;
 
 function getToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -12,6 +13,10 @@ function setToken(token) {
   } else {
     localStorage.removeItem(TOKEN_KEY);
   }
+}
+
+function registerUnauthorizedHandler(fn) {
+  onUnauthorized = fn;
 }
 
 async function request(path, options = {}) {
@@ -43,6 +48,7 @@ async function request(path, options = {}) {
   if (!response.ok) {
     if (response.status === 401) {
       setToken(null);
+      if (typeof onUnauthorized === 'function') onUnauthorized();
     }
     const message = payload?.message || `Request to ${path} failed`;
     throw new Error(message);
@@ -68,4 +74,4 @@ export const api = {
   getToken,
 };
 
-export { API_BASE_URL };
+export { API_BASE_URL, registerUnauthorizedHandler };
