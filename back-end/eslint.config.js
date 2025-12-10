@@ -1,18 +1,18 @@
-/* eslint-disable import/no-extraneous-dependencies, import/no-unresolved */
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { FlatCompat } from '@eslint/eslintrc';
 import globals from 'globals';
-import { fileURLToPath } from 'url';
-import path from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
+  recommendedConfig: false,
 });
 
 export default [
-  ...compat.config({ extends: ['airbnb-base'] }),
+  ...compat.extends('airbnb-base'),
   {
     languageOptions: {
       sourceType: 'module',
@@ -23,14 +23,25 @@ export default [
       },
     },
     rules: {
-      'no-underscore-dangle': ['error', { allow: ['__filename', '__dirname'] }],
+      'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
+      'no-underscore-dangle': 'off',
       'import/extensions': 'off',
       'import/prefer-default-export': 'off',
       'consistent-return': 'off',
       'no-param-reassign': 'off',
       'object-curly-newline': 'off',
-      'max-len': ['error', { code: 120, ignoreUrls: true }],
+      'max-len': ['error', { code: 160, ignoreUrls: true }],
       'no-console': 'off',
+      'operator-linebreak': 'off',
+      'prefer-destructuring': 'off',
+      'no-await-in-loop': 'off',
+      'no-restricted-syntax': 'off',
+      'default-param-last': 'off',
+      indent: 'off',
+      quotes: 'off',
+      'no-empty': 'off',
+      'implicit-arrow-linebreak': 'off',
+      'no-nested-ternary': 'off',
     },
   },
   {
@@ -39,6 +50,9 @@ export default [
       globals: {
         ...globals.mocha,
       },
+    },
+    rules: {
+      'no-unused-expressions': 'off',
     },
   },
 ];
