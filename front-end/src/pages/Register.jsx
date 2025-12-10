@@ -23,14 +23,12 @@ export default function Register() {
       toast.error(error.message || 'Unable to register');
     }
   };
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
       <div className="bg-white shadow-xl rounded-2xl p-10 w-full max-w-md">
         <h1 className="text-3xl font-bold mb-6 text-center text-blue-700">
           Create Account
         </h1>
-
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium mb-1">Full Name</label>
