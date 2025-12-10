@@ -1,5 +1,6 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { api } from '../utils/api';
+import { api, registerUnauthorizedHandler } from '../utils/api';
 
 const AuthContext = createContext();
 
@@ -27,6 +28,10 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     fetchCurrentUser();
+    registerUnauthorizedHandler(() => {
+      setUser(null);
+      setTokenState(null);
+    });
   }, [fetchCurrentUser]);
 
   const login = async (email, password) => {
