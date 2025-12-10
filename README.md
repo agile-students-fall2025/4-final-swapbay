@@ -5,6 +5,12 @@ Users can buy, sell, or swap items directly, combining the convenience of e-comm
 
 ---
 
+## Live Deployment
+
+- Frontend + API: http://165.227.222.189
+
+---
+
 ## Product Vision Statement
 
 SwapBay empowers people to exchange value, not just money.  
@@ -93,6 +99,11 @@ cp .env.example .env   # if provided, or create .env manually
 MONGODB_URI=<your MongoDB connection string>
 JWT_SECRET=<random-long-secret>
 PORT=3000
+NODE_ENV=production             # for deployments
+JWT_EXPIRES_IN=7d
+FRONTEND_URL=http://localhost:5173  # or your deployed frontend URL
+SENDGRID_API_KEY=<optional-for-reset>
+SENDGRID_FROM_EMAIL=<verified-from-email>
 ```
 
 ```bash
@@ -149,11 +160,11 @@ For detailed contribution guidelines, please see the [CONTRIBUTING.md](./CONTRIB
 | Database | MongoDB / Mongoose |
 | Styling | CSS |
 | Version Control | Git & GitHub |
-| Deployment | TBD |
+| Deployment | DigitalOcean droplet (Nginx + PM2) |
 
 
 ---
 
-> “Not everyone has cash, but everyone has something to trade.”
+> "Not everyone has cash, but everyone has something to trade."
 
 ---
