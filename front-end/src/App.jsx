@@ -16,7 +16,6 @@ import ResetPasswordConfirm from './pages/ResetPasswordConfirm';
 // protected pages
 import Home from './pages/Home';
 import MyItems from './pages/MyItems';
-import ItemDetail from './pages/ItemDetail';
 import MyListings from './pages/MyListings';
 import MyOffers from './pages/MyOffers';
 import Profile from './pages/Profile';
@@ -70,7 +69,7 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <Layout>
-                      <ItemDetail />
+                      
                     </Layout>
                   </ProtectedRoute>
                 }
