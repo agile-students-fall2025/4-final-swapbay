@@ -51,16 +51,6 @@ The project follows an Agile/SCRUM development process, with iterative sprints, 
 
 ---
 
-## Product Features
-
-**Core Functionality**
-- User registration, login, and profile management  
-- Post and manage item listings with descriptions and images  
-- Three offer types: cash, swap, or both  
-- Offer review system with acceptance and rejection 
-- Search and filtering of listings by category, keywords, or condition  
-- In-app messaging between users
-
 These features together provide a comprehensive and user-friendly marketplace experience.
 
 ---
