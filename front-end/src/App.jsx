@@ -15,7 +15,7 @@ import ResetPasswordConfirm from './pages/ResetPasswordConfirm';
 
 // protected pages
 import Home from './pages/Home';
-import MyItems from './pages/MyItems';
+import MyItems from './pages/Myitems';
 import MyListings from './pages/MyListings';
 import MyOffers from './pages/MyOffers';
 import Profile from './pages/Profile';
