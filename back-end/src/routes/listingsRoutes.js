@@ -1,7 +1,7 @@
 import express from 'express';
 import { Item, Offer } from '../models/index.js';
 import { toListing, toOffer } from '../utils/serializers.js';
-import { optionalAuth } from '../middleware/auth.js';
+import { authRequired, optionalAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -45,11 +45,15 @@ router.get('/:id', optionalAuth, async (req, res) => {
   res.json({ item: toListing(item, req.user?.username) });
 });
 
-router.get('/:id/offers', optionalAuth, async (req, res) => {
+router.get('/:id/offers', authRequired, async (req, res) => {
   const item = await Item.findById(req.params.id)
     .populate('owner', 'username name photo')
     .lean();
   if (!item) return res.status(404).json({ message: 'Listing not found' });
+
+  if (!item.owner?._id?.equals(req.user._id)) {
+    return res.status(403).json({ message: 'You do not have access to this item.' });
+  }
 
   const offers = await Offer.find({ listing: item._id })
     .populate('listing')
