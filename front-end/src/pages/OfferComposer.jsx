@@ -69,7 +69,9 @@ export default function OfferComposer() {
   }
 
   const handleConfirm = async () => {
-    // Validate based on chosen type
+    if ((selectedType === 'money' || selectedType === 'both') && Number(moneyAmount) < 1) {
+      return toast.error('Please enter an amount of at least 1.');
+    }
     if ((selectedType === 'money' || selectedType === 'both') && !moneyAmount.trim()) {
       return toast.error('Please enter an offer amount.');
     }
@@ -144,6 +146,7 @@ export default function OfferComposer() {
             </label>
             <input
               type="number"
+              min="1"
               value={moneyAmount}
               onChange={(e) => setMoneyAmount(e.target.value)}
               placeholder="Enter your offer amount"
