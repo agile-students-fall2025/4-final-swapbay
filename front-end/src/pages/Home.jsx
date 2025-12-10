@@ -15,7 +15,6 @@ export default function Home() {
 
   const conditions = ['All', 'New', 'Like New', 'Good', 'Fair', 'Used'];
   const offerTypes = ['All', 'Money Only', 'Swap Only', 'Both'];
-
   const fetchListings = useCallback(async () => {
     setLoading(true);
     try {
@@ -42,7 +41,6 @@ export default function Home() {
       setLoading(false);
     }
   }, [query, conditionFilter, offerTypeFilter]);
-
   useEffect(() => {
     fetchListings();
   }, [fetchListings]);
@@ -81,8 +79,6 @@ export default function Home() {
           </select>
         </div>
       </div>
-
-      {/* Items Grid */}
       {loading ? (
         <p className="text-gray-600 text-center mt-10">Loading listings...</p>
       ) : items.length === 0 ? (
@@ -113,7 +109,6 @@ export default function Home() {
                     ? 'Swap Only'
                     : 'Both (Money + Swap)'}
                 </p>
-
                 <p className="text-gray-700 text-sm overflow-hidden text-ellipsis whitespace-nowrap">
                   {item.description}
                 </p>
@@ -127,7 +122,6 @@ export default function Home() {
                           : ''
                       }`}
                 </p>
-
                 <div className="flex justify-between mt-3">
                   {item.isMine ? (
                     <button
