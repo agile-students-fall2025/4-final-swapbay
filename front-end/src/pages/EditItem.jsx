@@ -3,7 +3,7 @@ import { useItems } from '../context/ItemContext';
 import { useOffers } from '../context/OfferContext';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { readImageFile } from '../utils/image';
+import { uploadImage } from '../utils/image';
 
 const CATEGORIES = ['Electronics', 'Sports', 'Computers', 'Books', 'Home', 'Misc'];
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Used'];
@@ -43,8 +43,9 @@ export default function EditItem() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const dataUrl = await readImageFile(file);
-      setForm((prev) => ({ ...prev, image: dataUrl }));
+      const url = await uploadImage(file, 'item');
+      setForm((prev) => ({ ...prev, image: url }));
+      toast.success('Image uploaded');
     } catch (error) {
       toast.error(error.message);
     }
