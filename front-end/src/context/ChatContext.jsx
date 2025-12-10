@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from './AuthContext';
@@ -21,7 +22,8 @@ export function ChatProvider({ children }) {
   }, []);
 
   const refreshChats = useCallback(
-    async ({ silent = false } = {}) => {
+    async (options = {}) => {
+      const silent = options.silent || false;
       if (!user) {
         setChats([]);
         setConversations({});
