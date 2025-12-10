@@ -92,10 +92,14 @@ swapbay-frontend/
 ---
 
 ### Environment
-- The frontend expects the backend running on `http://localhost:3000`. Override with a `.env` file in `front-end/`:
+- The frontend expects the backend running on `http://localhost:3000`. Override with a `.env` file in `front-end/` for local or production:
 
   ```
+  # Local
   VITE_API_URL=http://localhost:3000
+
+  # Production example
+  VITE_API_URL=http://165.227.222.189
   ```
 
 - Data persists in MongoDB via the backend API (configure `MONGODB_URI`/`JWT_SECRET` in `back-end/.env`).
@@ -112,3 +116,4 @@ npm run build
 
 The compiled static files will appear in the `dist/` directory.
 
+Deployed instance: http://165.227.222.189
