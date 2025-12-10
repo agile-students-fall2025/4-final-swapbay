@@ -11,58 +11,104 @@ export default function MyItems() {
     addToListing,
     removeFromListing,
     deleteItem,
-    isItemOffered,
+    isItemOfferedByMe,
+    loading,
   } = useItems();
-  const { offers, removeOffersByUserItemTitle } = useOffers();
+  const { offers: incomingOffers } = useOffers();
   const [selectOfferTypeFor, setSelectOfferTypeFor] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('All');
 
   // Compute item labels dynamically
   const itemsWithLabels = useMemo(() => {
     return items.map((i) => {
-      const offered = isItemOffered(i.title, offers);
+      const offeredByMe = isItemOfferedByMe(i.id);
+      const hasIncoming = incomingOffers.some(
+        (offer) => offer.listingId === i.id && ['Pending'].includes(offer.status)
+      );
+      const offered = offeredByMe;
       const listed = i.status === 'public';
       const available = i.available;
-      let label = 'Draft';
+      const badges = [];
+      let statusLabel = null;
 
       if (!available) {
-        label = i.unavailableReason === 'swapped' ? 'Swapped' : 'Sold';
-      } else if (listed && offered) {
-        label = 'Listed + Offered';
-      } else if (listed) {
-        label = 'Listed';
-      } else if (offered) {
-        label = 'Offered';
+        statusLabel = i.unavailableReason === 'swapped' ? 'Swapped' : 'Sold';
+      } else {
+        if (listed) badges.push('Listed');
+        if (offered) badges.push('Offered');
+        if (!listed && !offered) badges.push('Draft');
       }
 
-      return { ...i, __offered: offered, __listed: listed, __label: label };
+      return {
+        ...i,
+        __offered: offered,
+        __incoming: hasIncoming,
+        __listed: listed,
+        __badges: badges,
+        __status: statusLabel,
+      };
     });
-  }, [items, offers, isItemOffered]);
+  }, [items, incomingOffers, isItemOfferedByMe]);
 
   // Handlers
   const handleAddToListing = (id) => setSelectOfferTypeFor(id);
+  
 
-  const confirmListing = (id, sellerOfferType) => {
-    addToListing(id, sellerOfferType);
-    setSelectOfferTypeFor(null);
-    toast.success('Item listed!');
+  const confirmListing = async (id, sellerOfferType) => {
+    try {
+      await addToListing(id, sellerOfferType);
+      toast.success('Item listed!');
+    } catch (error) {
+      toast.error(error.message || 'Failed to list item');
+    } finally {
+      setSelectOfferTypeFor(null);
+    }
   };
 
-  const handleRemoveFromListing = (id) => {
-    removeFromListing(id);
-    toast('Listing removed (now private)');
+  const handleRemoveFromListing = async (id) => {
+    try {
+      await removeFromListing(id);
+      toast('Listing removed (now private)');
+    } catch (error) {
+      toast.error(error.message || 'Failed to update listing');
+    }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     const it = items.find((i) => i.id === id);
-    deleteItem(id);
-    if (it) toast.success(`Deleted "${it.title}"`);
+    if (!it) {
+      return;
+    }
+    if (it.status === 'public') {
+      toast.error('Listed items cannot be deleted. Unlist first.');
+      return;
+    }
+    if (!it.available || it.unavailableReason) {
+      toast.error('Sold or swapped items cannot be deleted.');
+      return;
+    }
+    try {
+      await deleteItem(id);
+      if (it) toast.success(`Deleted "${it.title}"`);
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete item');
+    }
   };
 
   const canEdit = (i) =>
     i.available &&
     !i.unavailableReason &&
-    !i.__label.includes('Sold') &&
-    !i.__label.includes('Swapped');
+    !i.__listed &&
+    !i.__offered &&
+    !i.__incoming;
+
+  const handleEdit = (item) => {
+    if (!canEdit(item)) {
+      toast.error('Cannot edit listed or offered items. Remove them from offers first.');
+      return;
+    }
+    navigate(`/edit-item/${item.id}`);
+  };
 
   return (
     <div>
@@ -78,11 +124,36 @@ export default function MyItems() {
       </div>
 
       {/* Items Grid */}
-      {itemsWithLabels.length === 0 ? (
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-sm text-gray-600">Filter:</span>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="text-sm border rounded-md px-2 py-1"
+        >
+          <option>All</option>
+          <option>Listed</option>
+          <option>Draft</option>
+          <option>Sold/Swapped</option>
+        </select>
+      </div>
+
+      {loading ? (
+        <p className="text-gray-500">Loading your items...</p>
+      ) : itemsWithLabels.length === 0 ? (
         <p className="text-gray-500">No items yet.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {itemsWithLabels.map((item) => (
+          {itemsWithLabels
+            .filter((item) => {
+              if (statusFilter === 'All') return true;
+              if (statusFilter === 'Listed') return item.__listed && item.available;
+              if (statusFilter === 'Draft')
+                return item.available && !item.__listed && !item.__status;
+              if (statusFilter === 'Sold/Swapped') return !item.available || item.__status;
+              return true;
+            })
+            .map((item) => (
             <div
               key={item.id}
               className={`bg-white shadow rounded-xl overflow-hidden hover:shadow-lg transition relative ${
@@ -117,21 +188,28 @@ export default function MyItems() {
                       {item.condition ? ` • ${item.condition}` : ''}
                     </p>
                   </div>
-                  <span
-                    className={`text-xs px-2 py-1 rounded-md ${
-                      item.__label === 'Listed + Offered'
-                        ? 'bg-purple-100 text-purple-700'
-                        : item.__label === 'Listed'
-                        ? 'bg-blue-100 text-blue-700'
-                        : item.__label === 'Offered'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : !item.available
-                        ? 'bg-gray-300 text-gray-700'
-                        : 'bg-gray-100 text-gray-700'
-                    }`}
-                  >
-                    {item.__label}
-                  </span>
+                  <div className="flex flex-wrap gap-1 text-xs">
+                    {item.__status ? (
+                      <span className="px-2 py-1 rounded-md bg-gray-300 text-gray-700">
+                        {item.__status}
+                      </span>
+                    ) : (
+                      item.__badges.map((badge) => (
+                        <span
+                          key={badge}
+                          className={`px-2 py-1 rounded-md ${
+                            badge === 'Listed'
+                              ? 'bg-blue-100 text-blue-700'
+                              : badge === 'Offered'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          {badge}
+                        </span>
+                      ))
+                    )}
+                  </div>
                 </div>
 
                 {/* Action Buttons */}
@@ -158,14 +236,10 @@ export default function MyItems() {
                       {/* Edit & Delete */}
                       <div className="flex gap-3">
                         <button
-                          onClick={() => {
-                            if (!canEdit(item))
-                              return toast.error('Cannot edit this item.');
-                            navigate(`/edit-item/${item.id}`);
-                          }}
-                          className={`flex-1 text-sm px-3 py-2 rounded-md ${
+                          onClick={() => handleEdit(item)}
+                          className={`flex-1 text-sm px-3 py-2 rounded-md border ${
                             canEdit(item)
-                              ? 'border hover:bg-gray-50'
+                              ? 'hover:bg-gray-50'
                               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           }`}
                         >
@@ -173,21 +247,18 @@ export default function MyItems() {
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="flex-1 text-sm px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                          disabled={item.__listed}
+                          className={`flex-1 text-sm px-3 py-2 rounded-md ${
+                            item.__listed
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : 'bg-red-600 text-white hover:bg-red-700'
+                          }`}
                         >
                           Delete
                         </button>
                       </div>
                     </>
-                  ) : (
-                    // Delete (History)
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="w-full text-sm px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
-                    >
-                      Delete (History)
-                    </button>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* Offer Type Selector (when listing) */}

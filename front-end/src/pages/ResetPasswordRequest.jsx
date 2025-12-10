@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { api } from '../utils/api';
 
 export default function ResetPasswordRequest() {
   const [email, setEmail] = useState('');
   const [confirmEmail, setConfirmEmail] = useState('');
-  const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email || !confirmEmail) {
@@ -20,8 +20,15 @@ export default function ResetPasswordRequest() {
       return;
     }
 
-    toast.success('Verification email sent!');
-    setTimeout(() => navigate('/reset-password-confirm'), 1500);
+    try {
+      setSubmitting(true);
+      await api.post('/api/auth/forgot-password', { email });
+      toast.success('Password reset link sent to your email.');
+    } catch (error) {
+      toast.error(error.message || 'Unable to send reset email.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -60,9 +67,10 @@ export default function ResetPasswordRequest() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 transition-colors"
+            disabled={submitting}
+            className="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Verify Email
+            {submitting ? 'Sending...' : 'Send Reset Link'}
           </button>
         </form>
 

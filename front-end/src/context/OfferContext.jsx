@@ -1,45 +1,67 @@
-import { createContext, useContext, useState } from 'react';
-import { mockOffers as initialIncoming } from '../utils/mockOffers';
-import { mockMyOffers as initialOutgoing } from '../utils/mockMyOffers';
-import { useItems } from './ItemContext';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { api } from '../utils/api';
+import { useAuth } from './AuthContext';
 
 const OfferContext = createContext();
 
 export function OfferProvider({ children }) {
-  const [offers, setOffers] = useState(initialIncoming); // Offers received
-  const [myOffers, setMyOffers] = useState(initialOutgoing); // Offers you made
+  const { user } = useAuth();
+  const [offers, setOffers] = useState([]);
+  const [myOffers, setMyOffers] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  let itemTools;
-  try {
-    itemTools = useItems();
-  } catch {
-    itemTools = null;
-  }
+  const fetchOffers = useCallback(async ({ silent = false } = {}) => {
+    if (!user) {
+      setOffers([]);
+      setMyOffers([]);
+      return;
+    }
+    if (!silent) setLoading(true);
+    try {
+      const [incoming, outgoing] = await Promise.all([
+        api.get('/api/offers/incoming'),
+        api.get('/api/offers/outgoing'),
+      ]);
+      const sortByNewest = (list = []) =>
+        [...list].sort(
+          (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        );
+      setOffers(sortByNewest(incoming.offers));
+      setMyOffers(sortByNewest(outgoing.offers));
+    } catch (error) {
+      console.error('Failed to load offers', error);
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, [user]);
 
-  // --- Incoming (ListingOffers) ---
-  const rejectOffer = (offerId) => {
-    setOffers((prev) => prev.filter((o) => o.id !== offerId));
+  useEffect(() => {
+    fetchOffers();
+    const interval = setInterval(() => fetchOffers({ silent: true }), 3000);
+    return () => clearInterval(interval);
+  }, [fetchOffers]);
+
+  const addOffer = async (payload) => {
+    const data = await api.post('/api/offers', payload);
+    await fetchOffers();
+    return data.offer;
   };
 
-  const acceptOffer = (offerId, itemId) => {
-    setOffers((prev) =>
-      prev.map((o) => (o.id === offerId ? { ...o, status: 'Accepted' } : o))
-    );
-    itemTools?.markUnavailable?.(itemId, 'sold');
+  const cancelMyOffer = async (offerId) => {
+    await api.post(`/api/offers/${offerId}/cancel`);
+    await fetchOffers();
   };
 
-  // --- Outgoing (MyOffers) ---
-  const addOffer = (newOffer) => {
-    setMyOffers((prev) => [newOffer, ...prev]);
+  const rejectOffer = async (offerId) => {
+    await api.post(`/api/offers/${offerId}/reject`);
+    await fetchOffers();
   };
 
-  const cancelMyOffer = (offerId, myItemId) => {
-    setMyOffers((prev) => prev.filter((o) => o.id !== offerId));
-    itemTools?.revertOfferStatus?.(myItemId);
-  };
-
-  const removeMyOffersByItemId = (myItemId) => {
-    setMyOffers((prev) => prev.filter((o) => o.myItemId !== myItemId));
+  const acceptOffer = async (offerId) => {
+    const data = await api.post(`/api/offers/${offerId}/accept`);
+    await fetchOffers();
+    return data.offer;
   };
 
   return (
@@ -51,7 +73,8 @@ export function OfferProvider({ children }) {
         myOffers,
         addOffer,
         cancelMyOffer,
-        removeMyOffersByItemId,
+        refreshOffers: fetchOffers,
+        loading,
       }}
     >
       {children}

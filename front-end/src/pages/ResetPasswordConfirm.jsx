@@ -1,14 +1,29 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { api } from '../utils/api';
 
 export default function ResetPasswordConfirm() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const token = searchParams.get('token');
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    if (!token) {
+      toast.error('Reset link is missing or expired. Request a new one.');
+    }
+  }, [token]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!token) {
+      toast.error('Reset link is invalid. Please request a new one.');
+      return;
+    }
 
     if (!password || !confirm) {
       toast.error('Please fill in both fields.');
@@ -20,8 +35,16 @@ export default function ResetPasswordConfirm() {
       return;
     }
 
-    toast.success('Password reset successfully!');
-    setTimeout(() => navigate('/login'), 1500);
+    try {
+      setSubmitting(true);
+      await api.post('/api/auth/reset-password', { token, password });
+      toast.success('Password reset successfully! Please log in.');
+      navigate('/login');
+    } catch (error) {
+      toast.error(error.message || 'Unable to reset password.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -60,9 +83,10 @@ export default function ResetPasswordConfirm() {
 
           <button
             type="submit"
-            className="w-full bg-green-600 text-white py-2 rounded-md font-medium hover:bg-green-700 transition-colors"
+            disabled={submitting}
+            className="w-full bg-green-600 text-white py-2 rounded-md font-medium hover:bg-green-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Reset Password
+            {submitting ? 'Resetting...' : 'Reset Password'}
           </button>
         </form>
 
@@ -76,4 +100,3 @@ export default function ResetPasswordConfirm() {
     </div>
   );
 }
-

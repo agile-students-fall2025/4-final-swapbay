@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import { uploadImage } from '../utils/image';
 
 export default function EditProfile() {
   const { user, updateProfile, deleteAccount } = useAuth();
@@ -18,25 +19,37 @@ export default function EditProfile() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setForm({ ...form, photo: reader.result });
-    reader.readAsDataURL(file);
+    try {
+      const url = await uploadImage(file, 'avatar');
+      setForm({ ...form, photo: url });
+      toast.success('Photo uploaded');
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    updateProfile(form);
-    toast.success('Profile updated!');
-    navigate('/profile');
+    try {
+      await updateProfile(form);
+      toast.success('Profile updated!');
+      navigate('/profile');
+    } catch (error) {
+      toast.error(error.message || 'Failed to update profile');
+    }
   };
 
-  const handleDelete = () => {
-    deleteAccount();
-    toast.success('Account deleted');
-    navigate('/login');
+  const handleDelete = async () => {
+    try {
+      await deleteAccount();
+      toast.success('Account deleted');
+      navigate('/login');
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete account');
+    }
   };
 
   return (
