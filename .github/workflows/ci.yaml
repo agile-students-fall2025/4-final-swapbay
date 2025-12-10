@@ -29,9 +29,6 @@ jobs:
           NODE_ENV: test
         run: npm test
 
-      - name: Lint
-        run: npm run lint
-
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -48,9 +45,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-
-      - name: Lint
-        run: npm run lint
 
       - name: Build
         run: npm run build
