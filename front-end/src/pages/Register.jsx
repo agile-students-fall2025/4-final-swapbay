@@ -2,23 +2,19 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
-
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !username || !email || !password) {
       toast.error('Please fill all fields.');
       return;
     }
-
     try {
       await register({ name, username, email, password });
       toast.success('Account created!');
@@ -47,7 +43,6 @@ export default function Register() {
               required
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium mb-1">Username</label>
             <input
@@ -61,7 +56,6 @@ export default function Register() {
               required
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium mb-1">Email</label>
             <input
@@ -73,7 +67,6 @@ export default function Register() {
               required
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium mb-1">Password</label>
             <input
@@ -85,7 +78,6 @@ export default function Register() {
               required
             />
           </div>
-
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
@@ -93,7 +85,6 @@ export default function Register() {
             Sign Up
           </button>
         </form>
-
         <p className="text-sm text-gray-600 text-center mt-4">
           Already have an account?{' '}
           <Link to="/login" className="text-blue-600 hover:underline">
