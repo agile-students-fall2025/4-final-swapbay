@@ -108,10 +108,10 @@ export default function Home() {
                 <p className="text-sm text-blue-600 font-semibold">
                   Offer Type:{' '}
                   {item.offerType === 'money'
-                    ? 'Money Only 💵'
+                    ? 'Money Only'
                     : item.offerType === 'swap'
-                    ? 'Swap Only 🔁'
-                    : 'Both 💵 + 🔁'}
+                    ? 'Swap Only'
+                    : 'Both (Money + Swap)'}
                 </p>
 
                 <p className="text-gray-700 text-sm overflow-hidden text-ellipsis whitespace-nowrap">

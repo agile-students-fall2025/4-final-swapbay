@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { readImageFile } from '../utils/image';
+import { uploadImage } from '../utils/image';
 
 export default function EditProfile() {
   const { user, updateProfile, deleteAccount } = useAuth();
@@ -23,8 +23,9 @@ export default function EditProfile() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const dataUrl = await readImageFile(file);
-      setForm({ ...form, photo: dataUrl });
+      const url = await uploadImage(file, 'avatar');
+      setForm({ ...form, photo: url });
+      toast.success('Photo uploaded');
     } catch (error) {
       toast.error(error.message);
     }
