@@ -110,6 +110,14 @@ router.post('/', createRules, async (req, res) => {
     return res.status(400).json({ message: 'Cannot make an offer on your own listing.' });
   }
 
+  const offerType = req.body.offerType || 'money';
+  const amountInput = Number(req.body.amount);
+  if (['money', 'both'].includes(offerType)) {
+    if (!Number.isFinite(amountInput) || amountInput <= 0) {
+      return res.status(400).json({ message: 'Offer amount must be greater than 0.' });
+    }
+  }
+
   let swapItem = null;
   if (req.body.myItemId) {
     swapItem = await Item.findById(req.body.myItemId);
@@ -126,8 +134,8 @@ router.post('/', createRules, async (req, res) => {
     listingOwnerUsernameSnapshot: listing.owner?.username,
     seller: listing.owner?._id || listing.owner,
     buyer: req.user._id,
-    offerType: req.body.offerType || 'money',
-    amount: Number(req.body.amount) || 0,
+    offerType,
+    amount: ['money', 'both'].includes(offerType) ? amountInput : 0,
     myItem: swapItem?._id || null,
     swapItemSnapshot: swapItem
       ? {
@@ -244,6 +252,10 @@ router.post('/:id/accept', async (req, res) => {
       await swapItem.save();
     }
     await Offer.deleteMany({ myItem: offer.myItem, _id: { $ne: offer._id } });
+    await Offer.updateMany(
+      { listing: offer.myItem, _id: { $ne: offer._id } },
+      { status: 'Rejected' },
+    );
   }
 
   const offerDetails = formatOfferDescription(offer);
@@ -272,16 +284,6 @@ router.post('/:id/accept', async (req, res) => {
     .lean();
 
   res.json({ offer: toOffer(populated, req.user.username), listing });
-});
-
-router.delete('/:id', async (req, res) => {
-  const offer = await Offer.findById(req.params.id);
-  if (!offer) return res.status(404).json({ message: 'Offer not found' });
-  if (!offer.buyer.equals(req.user._id)) {
-    return res.status(403).json({ message: 'Cannot delete this offer.' });
-  }
-  await Offer.findByIdAndDelete(offer._id);
-  res.json({ message: 'Offer removed' });
 });
 
 export default router;
